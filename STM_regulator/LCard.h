@@ -91,7 +91,7 @@ public:
 	double* AsyncAnalogRead(double freq = -1, uint32_t tout = 1, uint32_t flags = 0);
 	double SingleDigitalRead();
 	void BackstepZ();
-	ADC_Collect AnalogRead(int av_count = 8, int timeout_ms = 0, int bufsize = ADC_BUF_SIZE);
+	ADC_Collect AnalogRead(int timeout_ms = 0, int bufsize = ADC_BUF_SIZE);
 	void StopReadStream();
 
 	

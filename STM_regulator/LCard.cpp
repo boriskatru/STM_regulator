@@ -197,7 +197,7 @@ void LCard::BackstepZ() {
 /// <summary>
 /// Чтение сигнала с платы. Возвращает обработанную информацию в data
 /// </summary>
-ADC_Collect LCard::AnalogRead(int av_count , int timeout_ms , int bufsize ) {
+ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 	if (is_reading == 0) {
 		err = L502_StreamsStart(hnd);
 		if (err != 0) {
@@ -206,8 +206,7 @@ ADC_Collect LCard::AnalogRead(int av_count , int timeout_ms , int bufsize ) {
 		}
 		else { is_reading = 1; }
 	}
-	//Timer tmr;
-	//L502_GetRecvReadyCount(hnd, &ready);
+	
 	int recv_zero_cnt = 0;
 	err = L502_Recv(hnd, buf, bufsize, timeout_ms);
 	while (err == 0) {
@@ -236,8 +235,7 @@ ADC_Collect LCard::AnalogRead(int av_count , int timeout_ms , int bufsize ) {
 	}
 	else if ((err != 0) && (err != -11)) cerr << "Ошибка  " << err << " в L502_ProcessAdcData()" << endl;
 	data.parse_channels();
-	/*data.Averaging(av_count);*/
-	//cout << tmr.get_loop_interval() << endl;
+	
 	return data;
 
 }

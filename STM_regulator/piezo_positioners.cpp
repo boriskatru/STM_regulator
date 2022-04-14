@@ -5,7 +5,7 @@
 using namespace std;
 using namespace std::chrono;
 /// <summary>
-/// 
+/// Обновлении/изменение позиции пьезокристаллов
 /// </summary>
 /// <param name="position"> Новая позиция</param>
 /// <param name="unit"> единицы измерения (V,U -вольт; M,N - нм) </param>
@@ -52,7 +52,7 @@ void PiezoPositioners::UpdatePos(Vecter position, char unit ) {
 	}
 }
 /// <summary>
-/// 
+/// Обновлении/изменение позиции пьезокристаллов по оси Z
 /// </summary>
 /// <param name="positionZ"> Новая позиция по Z </param>
 /// <param name="unit"> единицы измерения (V,U -вольт; M,N - нм) </param>

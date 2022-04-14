@@ -53,12 +53,12 @@ int main()
    regul.rise(1,9000000);
    cout << "PID started" << endl;
    //int volt = 0.55;
-   regul.IntPID(1, -2, 150000000);
+   regul.IntPID_exp(1, -2, 150000000);
    int cnt_run = 5;
    int cnt_seq = 20;
    for (int i = 0; i < cnt_seq; i++) {
        cout << "PID" << endl;
-       regul.IntPID(1, -2, 5000000);
+       regul.IntPID_exp(1, -2, 5000000);
        cout << "graph number: " << i << endl << endl;
        for (int k = 0; k < cnt_run; k++) {
            regul.VANC_(2, -2, 0.002, i * cnt_run + k);

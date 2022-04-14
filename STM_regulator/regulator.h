@@ -141,7 +141,7 @@ public:
 	/// <param name="target_V">напряжение детектирования касания</param>
 	/// <param name="delay_micro">задержка в мкс</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
-	/// <returns> высоту касания в В</returns>
+	/// <returns> высота касания в В</returns>
 	double Landing(double bias_ = 1, double range = 4.5, double target_V = -0.25, double delay_micro = 0, double djump = MIN_STEP_SIZE);
 
 	////////////PID РЕГУЛЯТОРЫ////////////
