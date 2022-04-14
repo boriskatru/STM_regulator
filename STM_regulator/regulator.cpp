@@ -265,13 +265,13 @@ void Regulator::IntPID_exp(double bias_, double target_V, double duration_us, do
 	if (duration_us == 0) {
 		pid.set_zero_pos(piezo.Position(), start_offset);
 		while (true) {
-			piezo.ZJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(ZCard.AnalogRead().Average() * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
+			piezo.ZFJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(ZCard.AnalogRead().Average() * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
 		}
 	}
 	else {
 		pid.set_zero_pos(piezo.Position(), start_offset);
 		while (tmr.get_full_interval() <= duration_us) {
-			piezo.ZJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(ZCard.AnalogRead().Average() * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
+			piezo.ZFJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(ZCard.AnalogRead().Average() * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
 		}
 	}
 

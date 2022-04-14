@@ -36,10 +36,16 @@ int main()
    }
 
    //regul.Retract(3);
-   regul.VANC_(3, -3, 0.003,1);
-   getchar(); getchar();
-  
-
+   //regul.VANC_(3, -3, 0.003,1);
+  // getchar(); getchar();
+   Timer tmr;
+   tmr.set_to_zero();
+   cout << "JUMP STARTED" << endl;
+   while (tmr.get_full_interval() < 500000000)
+   {
+       regul.piezo.ZFJumpTo(1 + 1 * sin(tmr.get_full_interval() / 10000), regul.ZCard);
+   }
+   cout << "JUMP ENDED" << endl;
    //regul.Landing(3,5, -0.015);
    //regul.ClearTip(100);
    

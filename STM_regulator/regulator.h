@@ -20,10 +20,11 @@ using namespace std;
 
 #define FORWARD true
 #define BACKWARD false
-#define Pc 0.0001
-#define Ic 0.00000001
+///#define Pc 0.0001
+#define Pc 0.000000001
+#define Ic 0.00000005
 #define Dc 0
-#define MIN_STEP_SIZE 0.00015258789 // примерно 0.5722 ангстрем
+#define MIN_STEP_SIZE 0.00015258789 // примерно 0.55 ангстрем в COARSE и 0.035 ангстрем в FINE
 inline double W_Lambert_approx(double x) {
 	double lnxpp = log(x + 1);
 	return (0.665 * (1 + 0.0195 * lnxpp) * lnxpp + 0.04);
@@ -87,7 +88,6 @@ public:
 
 	Regulator(double i_offset = 0, double noise_limit_V = 0.05, double frequency = 10000, double bias = 0.3);
 	~Regulator();
-
 
 
 	////////////ПЕРЕМЕЩЕНИЕ////////////
@@ -164,6 +164,7 @@ public:
 	/// <param name="start_offset"> смещение оси Z в начале скана </param>
 	/// <param name="I_to_nA"> коэффициент конвертации сигнала напряжения в ток </param>
 	void IntPID_exp(double bias_ = 1, double target_V = -0.2, double duration_us = 0, double start_offset = -10 * MIN_STEP_SIZE, double I_to_nA = 10);
+	void VAC_scanрпа();
 	/// <summary>
 	/// регуляция на основе внешнего ПИД с подъёмом между шагами:
 	/// </summary>

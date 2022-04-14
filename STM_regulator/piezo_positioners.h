@@ -10,7 +10,7 @@
 
 #define Z_COARSE_PREC 0.05
 #define Z_OUT L502_DAC_CH1
-//#define Z_OUT_FINE L502_DAC_CH2 // Или FINE регулировка, или ВАХ
+#define Z_OUT_FINE L502_DAC_CH2 
 #define BIAS_OUT L502_DAC_CH2
 #define X_OUT L502_DAC_CH1
 #define Y_OUT L502_DAC_CH2
@@ -28,7 +28,7 @@ class PiezoPositioners
 	Vecter position_V;
 	Vecter position_nm;
 	Vecter calibration_constant; // nm/V
-	
+	//double coarse_pos;
 	void UpdatePos(Vecter position, char unit = 'V');
 	
 	void UpdatePos(double positionZ, char unit = 'V');
@@ -48,15 +48,7 @@ public:
 	void JumpTo(Vecter position, LCard& ZCard, LCard& XYCard, const char unit = 'V');
 	void ZJump(double step, LCard& ZCard, const char unit = 'V');
 	void ZJumpTo(double position, LCard& ZCard, const char unit = 'V');
-	/*void ZFJumpTo(double position, LCard& ZCard,  const char unit = 'V') {
-
-		UpdatePos(position, unit);
-		tmp = fmod(position_V.z_proj, Z_COARSE_PREC);
-		if (last_move.z_proj != 0)
-			ZCard.SingleAnalogOut(position-tmp, Z_OUT);
-			ZCard.SingleAnalogOut(15*tmp, Z_OUT_FINE);
-
-	}*/
+	void ZFJumpTo(double position, LCard& ZCard, double fine_range = 5, const char unit = 'V');
 	void Move(Vecter distance, double delay_micro, double djump, LCard& ZCard, LCard& XYCard, double (*check)(double) = NULL);
 	void MoveTo(Vecter destination, double delay_micro, double djump, LCard& ZCard, LCard& XYCard, double (*check)(double) = NULL);
 	

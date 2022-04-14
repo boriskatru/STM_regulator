@@ -87,6 +87,9 @@ PiezoPositioners::PiezoPositioners(double _capacity, double _resistivity, double
 	calibration_constant(_calibration),
 	V_uplimit(5, 5, 5), V_downlimit(0, 0, 0) {}
 PiezoPositioners::~PiezoPositioners() {}
+
+
+
 /// <summary>
 /// Возвращает текущую позицию пьезокристаллов
 /// </summary>
@@ -178,6 +181,39 @@ void PiezoPositioners::ZJumpTo(double position, LCard& ZCard, const char unit) {
 	if (last_move.z_proj != 0)
 		ZCard.SingleAnalogOut(position_V.z_proj, Z_OUT);
 
+}
+/// <summary>
+/// Резкое перемещение В заданное положение по оси Z при помощи как DC(COARSE) так и AC (FINE) управляющих сигналов пьезиков
+/// </summary>
+/// <param name="position"> пункт назначения оси Z </param>
+/// <param name="ZCard"> плата оси Z </param>
+/// <param name="fine_range"> диапазон регулировки FINE составляющей </param>
+/// <param name="unit"> единицы измерения</param>
+void PiezoPositioners::ZFJumpTo(double position, LCard& ZCard, double fine_range, const char unit)
+{
+	if (position >= 0) {
+		if ((position_V.z_proj != position) && (abs(position_V.z_proj - position) > (fine_range / 16.5))) {
+			if (position - position_V.z_proj > 0) {
+				for (int i = 1; i <= 5; i++) {
+
+					ZCard.SingleAnalogOut((0.9 - 0.9 * i / 5) * fine_range, Z_OUT_FINE);
+					ZCard.SingleAnalogOut(((5 - i) * position_V.z_proj + i * position) / 5, Z_OUT);
+				}
+				
+			}
+			else {
+				for (int i = 1; i <= 5; i++) {
+					ZCard.SingleAnalogOut(((5 - i) * position_V.z_proj * 0.98 + i * position) / 5, Z_OUT);
+					ZCard.SingleAnalogOut((-1 + 0.9 * i / 5) * fine_range, Z_OUT_FINE);
+					
+				}
+			}		
+			UpdatePos(position, unit);
+		}
+		else {
+			ZCard.SingleAnalogOut((position - position_V.z_proj) * 16.5, Z_OUT_FINE);
+		}
+	}
 }
 /// <summary>
 ///  Плавное перемещение НА заданное расстояние
