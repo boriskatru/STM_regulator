@@ -21,8 +21,8 @@ using namespace std;
 #define FORWARD true
 #define BACKWARD false
 ///#define Pc 0.0001
-#define Pc 0.000000001
-#define Ic 0.00000005
+#define Pc 0.00001
+#define Ic 0.00001
 #define Dc 0
 #define MIN_STEP_SIZE 0.00015258789 // примерно 0.55 ангстрем в COARSE и 0.035 ангстрем в FINE
 inline double W_Lambert_approx(double x) {
@@ -132,7 +132,7 @@ public:
 	/// <param name="target_V">напряжение детектирования касания</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns>высоту касания в В</returns>
-	double rise(double bias_ = 3, double bwa = 0.1, double target_V = -0.15, double djump = MIN_STEP_SIZE);
+	double rise(double bias_ = 3, double bwa = 0.1, double target_V = 0.25, double djump = MIN_STEP_SIZE);
 	/// <summary>
 	/// Процедура лэндинга образца
 	/// </summary>
@@ -142,7 +142,7 @@ public:
 	/// <param name="delay_micro">задержка в мкс</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns> высота касания в В</returns>
-	double Landing(double bias_ = 1, double range = 4.5, double target_V = -0.25, double delay_micro = 0, double djump = MIN_STEP_SIZE);
+	double Landing(double bias_ = 1, double range = 4.5, double target_V = 0.25, double delay_micro = 0, double djump = MIN_STEP_SIZE);
 
 	////////////PID РЕГУЛЯТОРЫ////////////
 
@@ -154,7 +154,7 @@ public:
 	/// <param name="duration_us">длительность периода регуляции</param>
 	/// <param name="pid_log_offset">логарифмическое смещение входного сигнала</param>
 	/// <param name="start_offset"> смещение оси Z в начале скана </param>
-	void IntPID(double bias_ = 1, double target_V = -0.2, double duration_us = 0, double pid_log_offset = 0.05, double start_offset = -10 * MIN_STEP_SIZE);
+	void IntPID(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double pid_log_offset = 0.05, double start_offset = -10 * MIN_STEP_SIZE);
 	/// <summary>
 	/// Регуляция с помощью продвинутого собственного ПИД алгоритма на основе W-функции Ламберта
 	/// </summary>
@@ -163,7 +163,7 @@ public:
 	/// <param name="duration_us">длительность периода регуляции</param>
 	/// <param name="start_offset"> смещение оси Z в начале скана </param>
 	/// <param name="I_to_nA"> коэффициент конвертации сигнала напряжения в ток </param>
-	void IntPID_exp(double bias_ = 1, double target_V = -0.2, double duration_us = 0, double start_offset = -10 * MIN_STEP_SIZE, double I_to_nA = 10);
+	void IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_offset = -10 * MIN_STEP_SIZE, double I_to_nA = 10);
 	void VAC_scanрпа();
 	/// <summary>
 	/// регуляция на основе внешнего ПИД с подъёмом между шагами:
@@ -174,7 +174,7 @@ public:
 	/// <param name="crit_V">напряжение остановки подъёма (В)</param>
 	/// <param name="slope">скорость поднятия (В/с)</param>
 	/// <param name="djump"></param>
-	void ExtPID(double bias_ = 1, double delay = 25000, double bwa = 0.1, double crit_V = -0.15, double slope = 30, double djump = MIN_STEP_SIZE);
+	void ExtPID(double bias_ = 1, double delay = 25000, double bwa = 0.1, double crit_V = 0.25, double slope = 30, double djump = MIN_STEP_SIZE);
 
 	////////////ИЗМЕРЕНИЯ И СКАНЫ////////////
 
@@ -211,7 +211,7 @@ public:
 	/// <param name="y_step">шаг по оси Y</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <param name="up_mult"> дистанция остановки от поверхности при первичном подъёме (в единицах bwa) </param>
-	void TouchScan(double bias_ = 0.6, double bwa = 0.15, double crit_V = -0.015, double x_dim = 15000 * MIN_STEP_SIZE, double y_dim = 15000 * MIN_STEP_SIZE,
+	void TouchScan(double bias_ = 0.6, double bwa = 0.15, double crit_V = 0.25, double x_dim = 15000 * MIN_STEP_SIZE, double y_dim = 15000 * MIN_STEP_SIZE,
 		double x_step = 120 * MIN_STEP_SIZE, double y_step = 120 * MIN_STEP_SIZE, double djump = MIN_STEP_SIZE, int up_mult = 3); 
 	/// <summary>
 	/// Скан со сканированием VAC в каждой точке

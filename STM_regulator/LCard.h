@@ -9,7 +9,8 @@
 #include "l502api.h"
 
 #define MAX_MODULES_CNT 3
-#define ADC_BUF_SIZE 48
+#define ADC_BUF_SIZE_1 48	//размер короткого буфера платы оси Z для быстрого чтения и обратной реакции
+#define ADC_BUF_SIZE_2 4000 //размер длинного буфера платы оси XY  для чтения ВАХ
 #define S_CNT_CRIT_NUM 3
 #define RECIVE_COUNT_TIMEOUT 5000
 
@@ -29,12 +30,14 @@ public:
 	vector<double> average;
 	vector<vector<double>> input;
 	int err_cnt;
-	double current_data[ADC_BUF_SIZE];
+	int recv_cnt;
+	double *current_data;
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="ch_count"> Количество каналов считывания с платы </param>
-	ADC_Collect(int ch_count = 1);
+	/// <param name="ADC_BUF_SIZE"> Размер буфера чтения </param>
+	ADC_Collect(int ch_count = 1, int ADC_BUF_SIZE = ADC_BUF_SIZE_1);
 	/// <summary>
 	/// Обработка данных с карты
 	/// </summary>
@@ -61,7 +64,8 @@ class LCard {
 	double ADC_FRAME_FREQ = 0;
 	int err = 0;
 	int ADC_CHANNEL_COUNT = 16;
-	uint32_t* buf = (uint32_t*)malloc(2 * ADC_BUF_SIZE * sizeof(uint32_t));
+	uint32_t* buf;
+	int ADC_BUF_SIZE;
 	int is_reading = 0;
 	/// <summary>
 	/// текущее напряжение на выводах DAC
@@ -74,7 +78,7 @@ public:
 	/// </summary>
 	/// <param name="card_No">номер платы по порядку запуска </param>
 	/// <param name="ADC_CH_COUNT"> количество используемых каналов ввода</param>
-	LCard(int card_No = 1, int ADC_CH_COUNT = 1);
+	LCard(int card_No = 1, int ADC_CH_COUNT = 1, int ADC_BUF_SIZE = ADC_BUF_SIZE_1);
 	~LCard();
 
 	uint32_t count_ADC_data = 0;
@@ -91,7 +95,7 @@ public:
 	double* AsyncAnalogRead(double freq = -1, uint32_t tout = 1, uint32_t flags = 0);
 	double SingleDigitalRead();
 	void BackstepZ();
-	ADC_Collect AnalogRead(int timeout_ms = 0, int bufsize = ADC_BUF_SIZE);
+	ADC_Collect AnalogRead(int timeout_ms = 0, int bufsize = ADC_BUF_SIZE_1);
 	void StopReadStream();
 
 	

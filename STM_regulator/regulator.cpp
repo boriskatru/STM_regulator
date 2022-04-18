@@ -14,7 +14,7 @@ void PID::set_zero_pos(double pos, double offset ) {
 	integral = (pos + offset) / I;
 }
 double PID::signal(double r, double y, double dtime, double d_err, double max_step, double max_err ) {
-	err = r - y;
+	err = y - r;
 	if (abs(err) > max_err) err = sign(err * max_err);
 	integral += err * dtime;
 	if (integral <= 0)  integral = 0;
@@ -54,7 +54,7 @@ void Regulator::Step(int axis, int dir, double step_size ) {
 
 
 Regulator::Regulator(double i_offset, double noise_limit_V, double frequency , double bias) :
-	XYCard(1, 4),
+	XYCard(1, 4, ADC_BUF_SIZE_2),
 	ZCard(2, 1),
 	noise_limit_V(noise_limit_V),
 	frequency(frequency),
@@ -128,7 +128,7 @@ void Regulator::Retract(int steps, double step_incr, double rpt) {
 }
 double Regulator::rise(double bias_, double bwa, double target_V, double djump) {
 	bias = bias_;
-	ZCard.SingleAnalogOut(bias, BIAS_OUT);
+	//ZCard.SingleAnalogOut(bias, BIAS_OUT);
 	//uwait(1000000);
 	/*Обнуляем всё*/
 	bool is_touch = false;
@@ -139,7 +139,7 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 	ZCard.StopReadStream();
 	for (int i = 0; i < 60; i++) {//считывает n раз для очистки буфера
 		ZCard.AnalogRead();
-		is_touch = (ZCard.data.Average() < target_V);
+		is_touch = (ZCard.data.Average() > target_V);
 
 	}
 
@@ -150,7 +150,7 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 		//stp_count++;
 		//uwait(delay_micro);
 
-		is_touch = (ZCard.AnalogRead().Average() < target_V);
+		is_touch = (ZCard.AnalogRead().Average() > target_V);
 
 		if (last_height < 0.1) is_touch = false;
 		if (piezo.Position('Z') >= 5) {
@@ -169,14 +169,14 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 double Regulator::Landing(double bias_, double range, double target_V, double delay_micro, double djump) {
 	bias = bias_;
 	target_V += current_offset;
-	ZCard.SingleAnalogOut(bias, BIAS_OUT);
+	//ZCard.SingleAnalogOut(bias, BIAS_OUT);
 	bool is_touch = false;
 	int stp_count = 0;
 	double last_height = 99;
 	Vecter zero(0, 0, 0);
 	for (int i = 0; i < 60; i++) {//считывает n раз для очистки буфера
 		ZCard.AnalogRead();
-		is_touch = (ZCard.data.Average() < target_V);
+		is_touch = (ZCard.data.Average() > target_V);
 		//cout << ZCard.data.Average(8, 0) << endl;
 	}
 	//getchar(); getchar();
@@ -187,7 +187,7 @@ double Regulator::Landing(double bias_, double range, double target_V, double de
 		//stp_count++;
 		//uwait(delay_micro);
 
-		is_touch = (ZCard.AnalogRead().Average() < target_V);
+		is_touch = (ZCard.AnalogRead().Average() > target_V);
 
 		if (last_height < 0.2) is_touch = false;
 		if (piezo.Position('Z') >= range) {
@@ -227,7 +227,7 @@ void Regulator::IntPID(double bias_, double target_V, double duration_us, double
 	//piezo.Move(Vecter(0, 0, 0), 0, djump, ZCard, XYCard);
 	bias = bias_;
 	target_V += current_offset;
-	ZCard.SingleAnalogOut(bias, BIAS_OUT);
+	//ZCard.SingleAnalogOut(bias, BIAS_OUT);
 	ZCard.AnalogRead();
 
 	Timer tmr;
@@ -252,7 +252,7 @@ void Regulator::IntPID_exp(double bias_, double target_V, double duration_us, do
 
 	bias = bias_;
 	target_V += current_offset;
-	ZCard.SingleAnalogOut(bias, BIAS_OUT);
+	//ZCard.SingleAnalogOut(bias, BIAS_OUT);
 	/*double I_ = ZCard.data.Average() * 10;
 	double NL_ = 0.005;
 	double I_max = 100;
@@ -286,7 +286,7 @@ void Regulator::ExtPID(double bias_, double delay, double bwa, double crit_V, do
 
 VAC Regulator::VAC_(double max, double min, double step, int name, double delay_us) {
 	VAC  vac((max - min) / step);
-	ZCard.SingleAnalogOut(min, BIAS_OUT);
+	//ZCard.SingleAnalogOut(min, BIAS_OUT);
 	for (int i = 0; i < 50; i++)  XYCard.AnalogRead();
 	for (int i = (max - min) / step; i > 0; i--) {
 		ZCard.SingleAnalogOut(min + i * step, BIAS_OUT);
@@ -309,7 +309,7 @@ VAC Regulator::VAC_(double max, double min, double step, int name, double delay_
 VANC Regulator::VANC_(double max, double min, double step, int name, double delay_us) {
 	VANC  vanc((max - min) / step);
 
-	ZCard.SingleAnalogOut(min, BIAS_OUT);
+	//ZCard.SingleAnalogOut(min, BIAS_OUT);
 	ADC_Collect data;
 	for (int i = 0; i < 40; i++)  XYCard.AnalogRead();
 
@@ -335,7 +335,7 @@ VANC Regulator::VANC_(double max, double min, double step, int name, double dela
 void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim, double y_dim,	double x_step, double y_step, double djump, int up_mult) {
 	bias = bias_;
 	crit_V += current_offset;
-	ZCard.SingleAnalogOut(bias, BIAS_OUT);
+	//ZCard.SingleAnalogOut(bias, BIAS_OUT);
 	uwait(1000000);
 	Scan scan(x_dim, y_dim, x_step, y_step);
 	/*Обнуляем всё*/

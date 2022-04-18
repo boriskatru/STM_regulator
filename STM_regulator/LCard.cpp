@@ -1,11 +1,12 @@
 #include "LCard.h"
 
-ADC_Collect::ADC_Collect(int ch_count ) :
+ADC_Collect::ADC_Collect(int ch_count, int ADC_BUF_SIZE ) :
 	average(ch_count, 0),
 	ch_count(ch_count),
 	s_ch_bufsz(ADC_BUF_SIZE / ch_count),
 	err_cnt(0),
 	input(ch_count, vector<double>(ADC_BUF_SIZE / ch_count, 0))/*, swap(0)*/ {
+	current_data = (double*)malloc(sizeof(double) * ADC_BUF_SIZE);
 	for (int i = 0; i < ADC_BUF_SIZE; i++) {
 		current_data[i] = 0;
 	}
@@ -48,7 +49,8 @@ void ADC_Collect::show() {
 	}
 }
 
-LCard::LCard(int card_No , int ADC_CH_COUNT ) : data(ADC_CH_COUNT), cur_volt(2, 0), next_lch(0) {
+LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(ADC_BUF_SIZE), data(ADC_CH_COUNT, ADC_BUF_SIZE), cur_volt(2, 0), next_lch(0){
+	buf = (uint32_t*)calloc(ADC_BUF_SIZE, sizeof(uint32_t));
 	get_list_res = L502_GetSerialList(serial_list, MAX_MODULES_CNT, L502_GETDEVS_FLAGS_ONLY_NOT_OPENED, NULL);
 	if (get_list_res < 0)
 	{
@@ -113,8 +115,8 @@ LCard::LCard(int card_No , int ADC_CH_COUNT ) : data(ADC_CH_COUNT), cur_volt(2, 
 	L502_SetDmaBufSize(hnd, L502_DMA_CH_OUT, 16);
 	L502_Configure(hnd, 0);
 	if (err != 0) cerr << "Ошибка  " << err << " в L502_Configure()" << endl;
-
-
+	
+	
 }
 /// <summary>
 /// Установка настроек платы (см документацию к плате, необходимо отправлять нужный флаг)
@@ -235,7 +237,7 @@ ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 	}
 	else if ((err != 0) && (err != -11)) cerr << "Ошибка  " << err << " в L502_ProcessAdcData()" << endl;
 	data.parse_channels();
-	
+	data.recv_cnt = count_ADC_data;
 	return data;
 
 }

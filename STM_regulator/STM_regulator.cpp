@@ -29,7 +29,11 @@ int main()
    // ofstream file;
    // file.open("VAC.txt" , std::ofstream::out);
    Regulator regul;
+   //regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2).show();
 
+   //cout <<  endl << regul.XYCard.data.recv_cnt <<endl << endl << "/////////////////////// " << endl << endl << endl;
+ //  regul.ZCard.AnalogRead().show();
+   //getchar(); getchar();
    ADC_Collect data = regul.XYCard.AnalogRead();
    for (int i = 0; i < 3; i++) {
        cout << "ch " << i << " value: " << data.Average(8, i) << endl;
@@ -38,14 +42,14 @@ int main()
    //regul.Retract(3);
    //regul.VANC_(3, -3, 0.003,1);
   // getchar(); getchar();
-   Timer tmr;
-   tmr.set_to_zero();
-   cout << "JUMP STARTED" << endl;
-   while (tmr.get_full_interval() < 500000000)
-   {
-       regul.piezo.ZFJumpTo(1 + 1 * sin(tmr.get_full_interval() / 10000), regul.ZCard);
-   }
-   cout << "JUMP ENDED" << endl;
+   //Timer tmr;
+   //tmr.set_to_zero();
+   //cout << "JUMP STARTED" << endl;
+   //while (tmr.get_full_interval() < 500000000)
+   //{
+   //    regul.piezo.ZFJumpTo(1 + 1 * sin(tmr.get_full_interval() / 10000), regul.ZCard);
+   //}
+   //cout << "JUMP ENDED" << endl;
    //regul.Landing(3,5, -0.015);
    //regul.ClearTip(100);
    
@@ -53,13 +57,13 @@ int main()
 
    //regul.StepXY(0, -3);
    //getchar(); getchar();
-   //regul.Landing(3, 5 , -0.01);
+   regul.Landing(0, 5 , 0.03);
 
 
-   regul.rise(1,9000000);
+   regul.rise(0);
    cout << "PID started" << endl;
    //int volt = 0.55;
-   regul.IntPID_exp(1, -2, 150000000);
+   regul.IntPID_exp(0, 0.15);
    int cnt_run = 5;
    int cnt_seq = 20;
    for (int i = 0; i < cnt_seq; i++) {
