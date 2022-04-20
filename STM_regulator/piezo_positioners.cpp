@@ -191,29 +191,31 @@ void PiezoPositioners::ZJumpTo(double position, LCard& ZCard, const char unit) {
 /// <param name="unit"> единицы измерения</param>
 void PiezoPositioners::ZFJumpTo(double position, LCard& ZCard, double fine_range, const char unit)
 {
-	if (position >= 0) {
-		if ((position_V.z_proj != position) && (abs(position_V.z_proj - position) > (fine_range / 16.5))) {
-			if (position - position_V.z_proj > 0) {
-				for (int i = 1; i <= 5; i++) {
+	if (position < V_downlimit.z_proj) position = V_downlimit.z_proj; 
+	if (position > V_uplimit.z_proj)  position = V_uplimit.z_proj; 
+	if ((position_V.z_proj != position) && (abs(position_V.z_proj - position) > (fine_range / 16.5))) {
+		if (position - position_V.z_proj > 0) {
+			for (int i = 1; i <= 5; i++) {
 
-					ZCard.SingleAnalogOut((0.9 - 0.9 * i / 5) * fine_range, Z_OUT_FINE);
-					ZCard.SingleAnalogOut(((5 - i) * position_V.z_proj + i * position) / 5, Z_OUT);
-				}
-				
+				ZCard.SingleAnalogOut((0.9 - 0.9 * i / 5) * fine_range, Z_OUT_FINE);
+				ZCard.SingleAnalogOut(((5 - i) * position_V.z_proj + i * position) / 5, Z_OUT);
 			}
-			else {
-				for (int i = 1; i <= 5; i++) {
-					ZCard.SingleAnalogOut(((5 - i) * position_V.z_proj * 0.98 + i * position) / 5, Z_OUT);
-					ZCard.SingleAnalogOut((-1 + 0.9 * i / 5) * fine_range, Z_OUT_FINE);
-					
-				}
-			}		
-			UpdatePos(position, unit);
+
 		}
 		else {
-			ZCard.SingleAnalogOut((position - position_V.z_proj) * 16.5, Z_OUT_FINE);
+			for (int i = 1; i <= 5; i++) {
+				ZCard.SingleAnalogOut(((5 - i) * position_V.z_proj * 0.98 + i * position) / 5, Z_OUT);
+				ZCard.SingleAnalogOut((-1 + 0.9 * i / 5) * fine_range, Z_OUT_FINE);
+
+			}
 		}
+		UpdatePos(position, unit);
 	}
+	else {
+		ZCard.SingleAnalogOut((position - position_V.z_proj) * 16.5, Z_OUT_FINE);
+	}
+
+		
 }
 /// <summary>
 ///  Плавное перемещение НА заданное расстояние

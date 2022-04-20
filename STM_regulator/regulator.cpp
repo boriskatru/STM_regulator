@@ -161,7 +161,7 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 	}
 
 	ZCard.StopReadStream();
-	piezo.ZJump(-bwa, ZCard);
+	piezo.Move(Vecter(0, 0, -bwa), 0, 5 * MIN_STEP_SIZE, ZCard, XYCard);
 	//MHome();
 	//uwait(1000000);
 	return last_height;
@@ -248,7 +248,7 @@ void Regulator::IntPID(double bias_, double target_V, double duration_us, double
 
 
 }
-void Regulator::IntPID_exp(double bias_, double target_V, double duration_us, double start_offset, double I_to_nA) {
+void Regulator::IntPID_exp(double bias_, double target_V, double duration_us, double start_offset, double I_to_nA, double touch_lim) {
 
 	bias = bias_;
 	target_V += current_offset;
@@ -265,13 +265,13 @@ void Regulator::IntPID_exp(double bias_, double target_V, double duration_us, do
 	if (duration_us == 0) {
 		pid.set_zero_pos(piezo.Position(), start_offset);
 		while (true) {
-			piezo.ZFJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(ZCard.AnalogRead().Average() * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
+			piezo.ZFJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(LimCatch(ZCard.AnalogRead().Average(), touch_lim) * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
 		}
 	}
 	else {
 		pid.set_zero_pos(piezo.Position(), start_offset);
 		while (tmr.get_full_interval() <= duration_us) {
-			piezo.ZFJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(ZCard.AnalogRead().Average() * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
+			piezo.ZFJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(LimCatch(ZCard.AnalogRead().Average(), touch_lim) * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
 		}
 	}
 

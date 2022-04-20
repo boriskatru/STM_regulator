@@ -21,8 +21,8 @@ using namespace std;
 #define FORWARD true
 #define BACKWARD false
 ///#define Pc 0.0001
-#define Pc 0.00001
-#define Ic 0.00001
+#define Pc 0.0000005
+#define Ic 0.0000005
 #define Dc 0
 #define MIN_STEP_SIZE 0.00015258789 // примерно 0.55 ангстрем в COARSE и 0.035 ангстрем в FINE
 inline double W_Lambert_approx(double x) {
@@ -32,7 +32,10 @@ inline double W_Lambert_approx(double x) {
 inline double CHTransform(double current, double voltage, double offset = 0.005, double c1 = 2, double c2 = 10) {
 	return (W_Lambert_approx(c1 * voltage / max(current, offset)) * c2)* 1.05 * exp(-0.02 / c1 * current);
 }
-
+inline double LimCatch(double signal, double limit, double max = 25) {
+	if (signal > limit) return signal;
+	else return max;
+}
 class PID {
 	
 public:
@@ -163,8 +166,7 @@ public:
 	/// <param name="duration_us">длительность периода регул€ции</param>
 	/// <param name="start_offset"> смещение оси Z в начале скана </param>
 	/// <param name="I_to_nA"> коэффициент конвертации сигнала напр€жени€ в ток </param>
-	void IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_offset = -10 * MIN_STEP_SIZE, double I_to_nA = 10);
-	void VAC_scanрпа();
+	void IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_offset = -10 * MIN_STEP_SIZE, double I_to_nA = 10, double touch_lim = 0.003);
 	/// <summary>
 	/// регул€ци€ на основе внешнего ѕ»ƒ с подъЄмом между шагами:
 	/// </summary>
