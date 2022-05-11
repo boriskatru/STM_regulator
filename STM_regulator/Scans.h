@@ -52,7 +52,16 @@ public:
 	/// <param name="data"> Принятые данные </param>
 	/// <param name="ch_v"> Номер канала для напряжения</param>
 	/// <param name="ch_c"> Номер канала для тока </param>
-	void set(int point, bool dir, ADC_Collect data, int ch_c = 0, int ch_v = 1);
+	void set_point(int point, bool dir, ADC_Collect data, int ch_c = 0, int ch_v = 1);
+	/// <summary>
+	///  Сохранение конкретной точки на ВАХ
+	/// </summary>
+	/// <param name="point"> Номер точки </param>
+	/// <param name="dir"> Направление текущей развёртки </param>
+	/// <param name="data"> Принятые данные </param>
+	/// <param name="ch_v"> Номер канала для напряжения</param>
+	/// <param name="ch_c"> Номер канала для тока </param>
+	void set_full(bool dir, ADC_Collect data, int ch_c = 0, int ch_v = 1);
 	/// <summary>
 	/// Вывод в командную строку(для отладки)
 	/// </summary>
@@ -87,7 +96,7 @@ public:
 	/// <param name="ch_v"> Номер канала для напряжения</param>
 	/// <param name="ch_c"> Номер канала для тока </param>
 	/// <param name="ch_n"> Номер канала для шума</param>
-	void set(int point, bool dir, ADC_Collect data, int ch_c = 0, int ch_v = 1, int ch_n = 2);
+	void set_point(int point, bool dir, ADC_Collect data, int ch_c = 0, int ch_v = 1, int ch_n = 2);
 	/// <summary>
 	/// Печать в файл. ПОРЯДОК СТОЛБЦОВ: V,C,N
 	/// (напряжение, ток, мощность шума)

@@ -4,6 +4,9 @@
 #include <iostream>
 using namespace std;
 using namespace std::chrono;
+
+#define COARSE_TO_FINE 14.6
+
 /// <summary>
 /// Обновлении/изменение позиции пьезокристаллов
 /// </summary>
@@ -193,7 +196,7 @@ void PiezoPositioners::ZFJumpTo(double position, LCard& ZCard, double fine_range
 {
 	if (position < V_downlimit.z_proj) position = V_downlimit.z_proj; 
 	if (position > V_uplimit.z_proj)  position = V_uplimit.z_proj; 
-	if ((position_V.z_proj != position) && (abs(position_V.z_proj - position) > (fine_range / 16.5))) {
+	if ((position_V.z_proj != position) && (abs(position_V.z_proj - position) > (fine_range / COARSE_TO_FINE))) {
 		if (position - position_V.z_proj > 0) {
 			for (int i = 1; i <= 5; i++) {
 
@@ -212,7 +215,7 @@ void PiezoPositioners::ZFJumpTo(double position, LCard& ZCard, double fine_range
 		UpdatePos(position, unit);
 	}
 	else {
-		ZCard.SingleAnalogOut((position - position_V.z_proj) * 16.5, Z_OUT_FINE);
+		ZCard.SingleAnalogOut((position - position_V.z_proj) * COARSE_TO_FINE, Z_OUT_FINE);
 	}
 
 		

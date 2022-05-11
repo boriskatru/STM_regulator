@@ -135,7 +135,7 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 	int last_height;
 	//MHome();
 	/*Касание и выдержка*/
-	uwait(1000000);
+	uwait(500000);
 	ZCard.StopReadStream();
 	for (int i = 0; i < 60; i++) {//считывает n раз для очистки буфера
 		ZCard.AnalogRead();
@@ -152,7 +152,7 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 
 		is_touch = (ZCard.AnalogRead().Average() > target_V);
 
-		if (last_height < 0.1) is_touch = false;
+		if (last_height < 0.05) is_touch = false;
 		if (piezo.Position('Z') >= 5) {
 			//uwait(delay_micro);
 			MHome();
@@ -162,7 +162,7 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 
 	ZCard.StopReadStream();
 	piezo.Move(Vecter(0, 0, -bwa), 0, 5 * MIN_STEP_SIZE, ZCard, XYCard);
-	//MHome();
+	MHome();
 	//uwait(1000000);
 	return last_height;
 }
@@ -248,7 +248,7 @@ void Regulator::IntPID(double bias_, double target_V, double duration_us, double
 
 
 }
-void Regulator::IntPID_exp(double bias_, double target_V, double duration_us, double start_offset, double I_to_nA, double touch_lim) {
+double Regulator::IntPID_exp(double bias_, double target_V, double duration_us, double start_pos, double I_to_nA, double touch_lim) {
 
 	bias = bias_;
 	target_V += current_offset;
@@ -263,19 +263,21 @@ void Regulator::IntPID_exp(double bias_, double target_V, double duration_us, do
 	double offset = 0;*/
 	Timer tmr;
 	if (duration_us == 0) {
-		pid.set_zero_pos(piezo.Position(), start_offset);
+		pid.set_zero_pos(start_pos);
 		while (true) {
 			piezo.ZFJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(LimCatch(ZCard.AnalogRead().Average(), touch_lim) * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
 		}
 	}
 	else {
-		pid.set_zero_pos(piezo.Position(), start_offset);
+		pid.set_zero_pos(start_pos);
+		tmr.get_loop_interval();
 		while (tmr.get_full_interval() <= duration_us) {
 			piezo.ZFJumpTo(pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(LimCatch(ZCard.AnalogRead().Average(), touch_lim) * I_to_nA, bias), tmr.get_loop_interval()), ZCard);
 		}
+		
 	}
 
-
+	return pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(LimCatch(ZCard.AnalogRead().Average(), touch_lim) * I_to_nA, bias), tmr.get_loop_interval());
 
 }
 void Regulator::ExtPID(double bias_, double delay, double bwa, double crit_V, double slope, double djump) {}
@@ -291,14 +293,14 @@ VAC Regulator::VAC_(double max, double min, double step, int name, double delay_
 	for (int i = (max - min) / step; i > 0; i--) {
 		ZCard.SingleAnalogOut(min + i * step, BIAS_OUT);
 		if (delay_us != 0)uwait(delay_us);
-		vac.set(i, BACKWARD, XYCard.AnalogRead());
+		vac.set_point(i, BACKWARD, XYCard.AnalogRead());
 
 	}
 	for (int i = 0; i < 20; i++)  XYCard.AnalogRead();
 	for (int i = 0; i < (max - min) / step; i++) {
 		ZCard.SingleAnalogOut(min + i * step, BIAS_OUT);
 		if (delay_us != 0)uwait(delay_us);
-		vac.set(i, FORWARD, XYCard.AnalogRead());;
+		vac.set_point(i, FORWARD, XYCard.AnalogRead());;
 
 	}
 
@@ -316,7 +318,7 @@ VANC Regulator::VANC_(double max, double min, double step, int name, double dela
 	for (int i = (max - min) / step; i > 0; i--) {
 		ZCard.SingleAnalogOut(min + i * step, BIAS_OUT);
 		if (delay_us != 0)uwait(delay_us);
-		vanc.set(i, BACKWARD, XYCard.AnalogRead());
+		vanc.set_point(i, BACKWARD, XYCard.AnalogRead());
 	}
 
 	for (int i = 0; i < 20; i++)  XYCard.AnalogRead();
@@ -324,7 +326,7 @@ VANC Regulator::VANC_(double max, double min, double step, int name, double dela
 	for (int i = 0; i < (max - min) / step; i++) {
 		ZCard.SingleAnalogOut(min + i * step, BIAS_OUT);
 		if (delay_us != 0)uwait(delay_us);
-		vanc.set(i, FORWARD, XYCard.AnalogRead());
+		vanc.set_point(i, FORWARD, XYCard.AnalogRead());
 	}
 	ZCard.SingleAnalogOut(bias, BIAS_OUT);
 

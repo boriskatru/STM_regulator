@@ -5,16 +5,16 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <filesystem>
 #include "wait_bh.h"
 #include "l502api.h"
 
 #define MAX_MODULES_CNT 3
 #define ADC_BUF_SIZE_1 48	//размер короткого буфера платы оси Z для быстрого чтения и обратной реакции
-#define ADC_BUF_SIZE_2 4000 //размер длинного буфера платы оси XY  для чтения ВАХ
+#define ADC_BUF_SIZE_2 16000 //размер длинного буфера платы оси XY  для чтения ВАХ
 #define S_CNT_CRIT_NUM 3
 #define RECIVE_COUNT_TIMEOUT 5000
 
-using namespace std;
 
 static char serial_list[MAX_MODULES_CNT][L502_SERIAL_SIZE];
 const char serial_1[L502_SERIAL_SIZE] = "4T439903";
@@ -53,6 +53,11 @@ public:
 	/// Вывод текущих данных в командную строку (для отладки)
 	/// </summary>
 	void show();
+	/// <summary>
+	/// Запись данных в файл
+	/// </summary>
+	/// <param name="filename">имя и путь к создаваемому файлу</param>
+	void print_f(string filename="VAC.dat");
 };
 
 
@@ -98,6 +103,6 @@ public:
 	ADC_Collect AnalogRead(int timeout_ms = 0, int bufsize = ADC_BUF_SIZE_1);
 	void StopReadStream();
 
-	
+	void StartReadStream();
 };
 

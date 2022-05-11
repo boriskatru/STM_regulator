@@ -38,7 +38,7 @@ void VAC:: print_in_file(bool dir, ofstream& outstream) {
 			outstream << endl;
 		}
 }
-void VAC::set(int point, bool dir, ADC_Collect data, int ch_c , int ch_v ) {
+void VAC::set_point(int point, bool dir, ADC_Collect data, int ch_c , int ch_v ) {
 	if (dir == FORWARD) {
 		FWcurrents[point] = data.Average(8, ch_c);
 		FWvoltages[point] = data.Average(8, ch_v);
@@ -56,6 +56,15 @@ double VAC::avrg(vector<double>& array, int start, int avrg_num ) {
 	}
 	tmp = tmp / avrg_num;
 	return tmp;
+}
+void VAC::set_full(bool dir, ADC_Collect data, int ch_c, int ch_v)
+{
+	for (int i = 0; i < data.s_ch_bufsz; i++) {
+		FWcurrents[i] = data.input[ch_c][i];
+		FWvoltages[i] = data.input[ch_v][i];
+	}
+	
+	
 }
 void VAC::print_cout(int period ) {
 	cout << "FWvoltages" << "	" << "FWcurrents" << "	" << "BWvoltages" << "	" << "BWcurrents" << endl;
@@ -91,7 +100,7 @@ void VANC::print_in_file(bool dir, ofstream& outstream) {
 			outstream << endl;
 		}
 }
-void VANC::set(int point, bool dir, ADC_Collect data, int ch_c , int ch_v , int ch_n ) {
+void VANC::set_point(int point, bool dir, ADC_Collect data, int ch_c , int ch_v , int ch_n ) {
 	
 	if (dir == FORWARD) {
 		FWcurrents[point] = data.Average(8, ch_c);

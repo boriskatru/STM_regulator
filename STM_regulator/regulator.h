@@ -21,8 +21,8 @@ using namespace std;
 #define FORWARD true
 #define BACKWARD false
 ///#define Pc 0.0001
-#define Pc 0.0000005
-#define Ic 0.0000005
+#define Pc 0.000003
+#define Ic 0.0000001
 #define Dc 0
 #define MIN_STEP_SIZE 0.00015258789 // примерно 0.55 ангстрем в COARSE и 0.035 ангстрем в FINE
 inline double W_Lambert_approx(double x) {
@@ -126,7 +126,7 @@ public:
 	/// <param name="steps">Количество шагов ретракта</param>
 	/// <param name="step_incr"> инкремент увеличения шага (в случае касания)</param>
 	/// <param name="rpt">повторов шага между его увеличением</param>
-	void Retract(int steps = 1, double step_incr = 0.5, double rpt = 2);
+	void Retract(int steps = 1, double step_incr = 0.4, double rpt = 2);
 	/// <summary>
 	/// Предподъём иглы к обазцу
 	/// </summary>
@@ -135,7 +135,7 @@ public:
 	/// <param name="target_V">напряжение детектирования касания</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns>высоту касания в В</returns>
-	double rise(double bias_ = 3, double bwa = 0.1, double target_V = 0.25, double djump = MIN_STEP_SIZE);
+	double rise(double bias_ = 3, double bwa = 0.1, double target_V = 0.1, double djump = MIN_STEP_SIZE);
 	/// <summary>
 	/// Процедура лэндинга образца
 	/// </summary>
@@ -145,7 +145,7 @@ public:
 	/// <param name="delay_micro">задержка в мкс</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns> высота касания в В</returns>
-	double Landing(double bias_ = 1, double range = 4.5, double target_V = 0.25, double delay_micro = 0, double djump = MIN_STEP_SIZE);
+	double Landing(double bias_ = 1, double range = 4.5, double target_V = 0.05, double delay_micro = 0, double djump = MIN_STEP_SIZE);
 
 	////////////PID РЕГУЛЯТОРЫ////////////
 
@@ -166,11 +166,11 @@ public:
 	/// <param name="duration_us">длительность периода регуляции</param>
 	/// <param name="start_offset"> смещение оси Z в начале скана </param>
 	/// <param name="I_to_nA"> коэффициент конвертации сигнала напряжения в ток </param>
-	void IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_offset = -10 * MIN_STEP_SIZE, double I_to_nA = 10, double touch_lim = 0.003);
+	double IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_pos = 0, double I_to_nA = 10, double touch_lim = 0.002);
 	/// <summary>
 	/// регуляция на основе внешнего ПИД с подъёмом между шагами:
 	/// </summary>
-	/// <param name="bias_"> напрядение на игле </param>
+	/// <param name="bias_"> напряжение на игле </param>
 	/// <param name="delay">задержка (мкс) на стабилизацию ПИД</param>
 	/// <param name="bwa">высота подъёма (В)</param>
 	/// <param name="crit_V">напряжение остановки подъёма (В)</param>

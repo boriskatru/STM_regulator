@@ -26,7 +26,7 @@ int main()
     Regulator regul;
    
 
-    ADC_Collect data = regul.XYCard.AnalogRead();
+    ADC_Collect data = regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2);
     for (int i = 0; i < 3; i++) {
         cout << "ch " << i << " value: " << data.Average(8, i) << endl;
     }
@@ -38,39 +38,41 @@ int main()
         cout << "N3 " << i << " value: " << regul.ZCard.AnalogRead().current_data[3] << endl;
     }
     //getchar(); getchar();
-    //regul.Retract();
-   // regul.Landing(3, 5, 0.04);
-    //getchar(); getchar();
-
-    regul.rise(3, 0.25);
+    regul.Retract(3);
+    //regul.Landing(4, 5, 0.09);
+    getchar(); getchar();
+  
+   // regul.rise(3, 0.25);
     //regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2).show();
     cout << "PID started" << endl;
     //int volt = 0.55;
-    regul.XYCard.AnalogRead();
-    regul.IntPID_exp(3, 0.035);
-    regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2).show();
-    regul.IntPID_exp(3, 0.035);
-    int cnt_run = 5;
-    int cnt_seq = 20;
-    for (int i = 0; i < cnt_seq; i++) {
-        cout << "PID" << endl;
-        regul.IntPID_exp(1, -2, 5000000);
-        cout << "graph number: " << i << endl << endl;
-        for (int k = 0; k < cnt_run; k++) {
-            regul.VANC_(2, -2, 0.002, i * cnt_run + k);
-        }
-
-        cout << "done!" << endl;
-
-
+    //uwait(30000000);
+   
+    
+    regul.XYCard.StopReadStream();
+    double tmp= regul.IntPID_exp(1, 0.1, 100000000, 0);
+    regul.XYCard.StartReadStream();
+    for (int i = 0; i < 30; i++) {
+        tmp = regul.IntPID_exp(1, 0.1, 20000000, tmp);
+        data = regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2);
+        cout << endl << endl << i << endl;
+        cout << " printing data..." << endl;
+        data.print_f("VAC"+to_string(i) + ".dat");
+        cout << "data printed in file VAC" <<i<< ".dat "<< endl;
     }
+    regul.IntPID_exp(1, 0.07, 0, tmp);
+   
 
     //regul.TouchScan(1,0.2,-0.01,5,5,0.05,0.05);
 
     regul.~Regulator();
     getchar(); getchar();
 }
-
+//Timer tmr;
+//tmr.set_to_zero();
+//while (true) {
+//    regul.piezo.ZFJumpTo(1 + sin(tmr.get_full_interval() / 10000), regul.ZCard);
+//}
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
 // Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
 

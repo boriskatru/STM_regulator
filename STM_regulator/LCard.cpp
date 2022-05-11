@@ -1,4 +1,7 @@
+#include <fstream>
 #include "LCard.h"
+
+using namespace std;
 
 ADC_Collect::ADC_Collect(int ch_count, int ADC_BUF_SIZE ) :
 	average(ch_count, 0),
@@ -47,6 +50,24 @@ void ADC_Collect::show() {
 			cout << input[i][k] << endl;
 		}
 	}
+}
+
+
+void ADC_Collect::print_f(string filename)
+{
+	ofstream file;
+	file.open("../../scans/" + filename, std::ofstream::out);
+	/*for (int i = 0; i < ch_count; i++) {
+		cout << "CHANNEL " << i << ":" << "	";
+	}*/
+	
+	for (int k = 0; k < s_ch_bufsz; k++) {
+		file << endl;
+		for (int i = 0; i < ch_count; i++) {
+			file << input[i][k] << "	";
+		}
+	}
+	
 }
 
 LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(ADC_BUF_SIZE), data(ADC_CH_COUNT, ADC_BUF_SIZE), cur_volt(2, 0), next_lch(0){
@@ -200,14 +221,7 @@ void LCard::BackstepZ() {
 /// Чтение сигнала с платы. Возвращает обработанную информацию в data
 /// </summary>
 ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
-	if (is_reading == 0) {
-		err = L502_StreamsStart(hnd);
-		if (err != 0) {
-			cerr << "Ошибка  " << err << " в L502_StreamsStart()" << endl;
-
-		}
-		else { is_reading = 1; }
-	}
+	StartReadStream();
 	
 	int recv_zero_cnt = 0;
 	err = L502_Recv(hnd, buf, bufsize, timeout_ms);
@@ -246,6 +260,16 @@ void LCard::StopReadStream() {
 
 	err = L502_StreamsStop(hnd);
 	if (err != 0) cerr << "Ошибка  " << err << " в L502_StreamsStop()" << endl;
+}
+void LCard::StartReadStream() {
+	if (is_reading == 0) {
+		err = L502_StreamsStart(hnd);
+		if (err != 0) {
+			cerr << "Ошибка  " << err << " в L502_StreamsStart()" << endl;
+
+		}
+		else { is_reading = 1; }
+	}
 }
 LCard::~LCard() {
 	StopReadStream();
