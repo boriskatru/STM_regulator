@@ -78,6 +78,11 @@ class Regulator
 	/// <param name="step_size"> напряжение шага</param>
 	void Step(int axis, int dir, double step_size = 5);
 
+	/// <summary>
+	/// Сохраняет текущую конфигурацию регулятора
+	/// </summary>
+	void save_config();
+
 public:
 	LCard  ZCard, XYCard;
 	PiezoPositioners piezo;

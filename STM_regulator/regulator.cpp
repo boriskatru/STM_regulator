@@ -52,6 +52,10 @@ void Regulator::Step(int axis, int dir, double step_size ) {
 	}
 }
 
+void Regulator::save_config()
+{
+}
+
 
 Regulator::Regulator(double i_offset, double noise_limit_V, double frequency , double bias) :
 	XYCard(1, 4, ADC_BUF_SIZE_2),
@@ -74,9 +78,13 @@ Regulator::~Regulator() {
 
 void Regulator::MHome(double step) {
 	piezo.MoveTo(Vecter(0, 0, 0), 0, step, ZCard, XYCard);
+	ZCard.save_config();
+	XYCard.save_config();
 }
 void Regulator::JHome() {
 	piezo.JumpTo(Vecter(0, 0, 0), ZCard, XYCard);
+	ZCard.save_config();
+	XYCard.save_config();
 }
 void Regulator::ClearTip(int cnt) {
 	for (int i = 0; i < cnt; i++) {
@@ -125,6 +133,7 @@ void Regulator::Retract(int steps, double step_incr, double rpt) {
 		ZStep(-1);
 		step++;
 	}
+	ZCard.save_config();
 }
 double Regulator::rise(double bias_, double bwa, double target_V, double djump) {
 	bias = bias_;
@@ -162,8 +171,8 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 
 	ZCard.StopReadStream();
 	piezo.Move(Vecter(0, 0, -bwa), 0, 5 * MIN_STEP_SIZE, ZCard, XYCard);
-	MHome();
 	//uwait(1000000);
+	ZCard.save_config();
 	return last_height;
 }
 double Regulator::Landing(double bias_, double range, double target_V, double delay_micro, double djump) {
@@ -212,6 +221,7 @@ double Regulator::Landing(double bias_, double range, double target_V, double de
 
 	getchar(); getchar();
 	ZCard.StopReadStream();
+	ZCard.save_config();
 	return last_height;
 }
 void Regulator::Calibration(int points_num, ofstream file, string filename) {
@@ -245,7 +255,7 @@ void Regulator::IntPID(double bias_, double target_V, double duration_us, double
 		}
 	}
 
-
+	ZCard.save_config();
 
 }
 double Regulator::IntPID_exp(double bias_, double target_V, double duration_us, double start_pos, double I_to_nA, double touch_lim) {
@@ -276,7 +286,7 @@ double Regulator::IntPID_exp(double bias_, double target_V, double duration_us, 
 		}
 		
 	}
-
+	ZCard.save_config();
 	return pid.signal(CHTransform(target_V * I_to_nA, bias), CHTransform(LimCatch(ZCard.AnalogRead().Average(), touch_lim) * I_to_nA, bias), tmr.get_loop_interval());
 
 }
@@ -306,6 +316,8 @@ VAC Regulator::VAC_(double max, double min, double step, int name, double delay_
 
 	ZCard.SingleAnalogOut(bias, BIAS_OUT);
 	vac.print_(to_string(name));
+	ZCard.save_config();
+	XYCard.save_config();
 	return vac;
 }
 VANC Regulator::VANC_(double max, double min, double step, int name, double delay_us) {
@@ -331,7 +343,8 @@ VANC Regulator::VANC_(double max, double min, double step, int name, double dela
 	ZCard.SingleAnalogOut(bias, BIAS_OUT);
 
 	vanc.print_(to_string(name));
-
+	ZCard.save_config();
+	XYCard.save_config();
 	return vanc;
 }
 void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim, double y_dim,	double x_step, double y_step, double djump, int up_mult) {
@@ -456,7 +469,9 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 	ZCard.StopReadStream();
 	//scan.SaveFiles();
 	cout << "Scanning done!" << endl;
-	getchar(); getchar();
+	ZCard.save_config();
+	XYCard.save_config();
+	
 }
 void Regulator::VAC_scan() {}
 

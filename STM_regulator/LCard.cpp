@@ -71,6 +71,8 @@ void ADC_Collect::print_f(string filename)
 }
 
 LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(ADC_BUF_SIZE), data(ADC_CH_COUNT, ADC_BUF_SIZE), cur_volt(2, 0), next_lch(0){
+
+	
 	buf = (uint32_t*)calloc(ADC_BUF_SIZE, sizeof(uint32_t));
 	get_list_res = L502_GetSerialList(serial_list, MAX_MODULES_CNT, L502_GETDEVS_FLAGS_ONLY_NOT_OPENED, NULL);
 	if (get_list_res < 0)
@@ -136,9 +138,100 @@ LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(AD
 	L502_SetDmaBufSize(hnd, L502_DMA_CH_OUT, 16);
 	L502_Configure(hnd, 0);
 	if (err != 0) cerr << "Ошибка  " << err << " в L502_Configure()" << endl;
+
+
+	name = card_No;
+	config_filename = "LCard_config" + to_string(name) + ".txt";
+	
+	save_config();
+}
+
+
+/// <summary>
+/// Инициализирует плату при помощи конфигурационного файла прошлой сессии
+/// </summary>
+/// <param name="configfile"></param>
+LCard::LCard(int card_No)
+{
+	name = card_No;
+	config_filename = "LCard_config" + to_string(name) + ".txt";
+	config_file.open("../LCardConfig/" + config_filename, std::fstream::in);
+	string tmp;
+
+	config_file >> tmp;
+	cout << tmp;
+	hnd = L502_Create();
+
+	config_file >> tmp;
+	serial = tmp.c_str();
+	err = L502_Open(hnd, serial);
+	if (err != 0) cerr << "Ошибка  " << err << "  в L502_Open()" << endl;
+
+	config_file >> tmp;
+	ADC_BUF_SIZE = stoi(tmp);
+	buf = (uint32_t*)calloc(ADC_BUF_SIZE, sizeof(uint32_t));
+
+	config_file >> tmp;
+	ADC_COLLECT_FREQ = stoi(tmp);
+
+	config_file >> tmp;
+	ADC_FRAME_FREQ = stoi(tmp);
+
+	config_file >> tmp;
+	count_ADC_data = stoi(tmp);
+	
+	config_file >> tmp;
+	is_reading = stoi(tmp);
+
+	config_file >> tmp;
+	cur_volt[0] = stoi(tmp);
+
+	config_file >> tmp;
+	cur_volt[1] = stoi(tmp);
+
+	config_file >> tmp;
+	data = ADC_Collect(stoi(tmp), ADC_BUF_SIZE);
+
+	config_file.close();
+
+	save_config();
+
 	
 	
 }
+/// <summary>
+/// Сохраняет текущую конфигурацию платы
+/// </summary>
+void LCard::save_config()
+{
+	std::filesystem::create_directories("../LCardConfig");
+	config_file.open("../LCardConfig/" + config_filename, std::fstream::out);
+	config_file << hnd << endl;
+	config_file << serial << endl;
+	config_file << ADC_BUF_SIZE << endl;
+	config_file << ADC_COLLECT_FREQ << endl;
+	config_file << ADC_FRAME_FREQ << endl;
+	config_file << count_ADC_data << endl;
+	config_file << is_reading << endl;
+	config_file << cur_volt[0] <<endl;
+	config_file << cur_volt[1] << endl;
+	config_file << data.ch_count << endl;
+	config_file.close();
+	cout << "LCard configuration saved" << endl;
+	//config_file.open("../LCardConfig/" + config_filename, std::fstream::in);
+	//string tmp;
+	//config_file >> tmp;
+	//cout << "readed config:" << endl << tmp << endl;
+	//config_file >> tmp;
+	//cout  << tmp << endl;
+	//config_file >> tmp;
+	//cout << tmp << endl;
+	//config_file >> tmp;
+	
+	//getchar(); getchar();
+}
+
+
 /// <summary>
 /// Установка настроек платы (см документацию к плате, необходимо отправлять нужный флаг)
 /// </summary>
@@ -147,7 +240,10 @@ LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(AD
 void LCard::SetMode(uint32_t flags) {
 	err = L502_Configure(hnd, flags);
 	if (err != 0) cerr << "Ошибка  " << err << " в L502_Configure(" << flags << ")" << endl;
+	save_config();
 }
+
+
 /// <summary>
 /// Единичный вывод на канал DAC
 /// </summary>
@@ -278,6 +374,8 @@ LCard::~LCard() {
 	err = L502_Free(hnd);
 	if (err != 0) cerr << "Ошибка  " << err << "  в L502_Free()" << endl;
 }
+
+
 
 /*LCard(char* _serial) {
 		serial = _serial;

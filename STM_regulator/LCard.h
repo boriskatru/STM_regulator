@@ -72,6 +72,10 @@ class LCard {
 	uint32_t* buf;
 	int ADC_BUF_SIZE;
 	int is_reading = 0;
+	int name;
+	string config_filename;
+	fstream config_file;
+	
 	/// <summary>
 	/// текущее напряжение на выводах DAC
 	/// </summary>
@@ -84,15 +88,16 @@ public:
 	/// <param name="card_No">номер платы по порядку запуска </param>
 	/// <param name="ADC_CH_COUNT"> количество используемых каналов ввода</param>
 	LCard(int card_No = 1, int ADC_CH_COUNT = 1, int ADC_BUF_SIZE = ADC_BUF_SIZE_1);
+	LCard(int card_No = 1);
 	~LCard();
 
 	uint32_t count_ADC_data = 0;
 	t_l502_hnd hnd;
-	char* serial;
+	const char* serial;
 	ADC_Collect data;
 	uint32_t next_lch;
 
-	
+	void save_config();
 	void SetMode(uint32_t flags);
 	void SingleAnalogOut(double data, uint32_t channel = L502_DAC_CH1, uint32_t flags = 0x0001);
 	void SingleDigitalOut(uint32_t val, uint32_t mask);
