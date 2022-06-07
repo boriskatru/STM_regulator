@@ -11,7 +11,7 @@
 
 #define MAX_MODULES_CNT 3
 #define ADC_BUF_SIZE_1 48	//размер короткого буфера платы оси Z для быстрого чтения и обратной реакции
-#define ADC_BUF_SIZE_2 16000 //размер длинного буфера платы оси XY  для чтения ВАХ
+#define ADC_BUF_SIZE_2 800000 //размер длинного буфера платы оси XY  для чтения ВАХ
 #define S_CNT_CRIT_NUM 3
 #define RECIVE_COUNT_TIMEOUT 5000
 
@@ -57,7 +57,7 @@ public:
 	/// Запись данных в файл
 	/// </summary>
 	/// <param name="filename">имя и путь к создаваемому файлу</param>
-	void print_f(string filename="VAC.dat");
+	void print_f(string filename="VAC.dat", string directory = "../../scans");
 };
 
 

@@ -13,7 +13,9 @@
 #include "regulator.h"
 
 using namespace std;
-using namespace std::chrono;
+//using namespace std::chrono;
+
+
 int main()
 {
     setlocale(LC_ALL, "Russian");
@@ -24,10 +26,10 @@ int main()
     
 
     Regulator regul;
-   
+    //getchar(); getchar();
 
-    ADC_Collect data = regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2);
-    for (int i = 0; i < 3; i++) {
+    ADC_Collect data = regul.XYCard.AnalogRead(100, ADC_BUF_SIZE_2);
+    for (int i = 0; i < regul.XYCard.data.ch_count; i++) {
         cout << "ch " << i << " value: " << data.Average(8, i) << endl;
     }
     ADC_Collect data1 = regul.ZCard.AnalogRead();
@@ -38,32 +40,17 @@ int main()
         cout << "N3 " << i << " value: " << regul.ZCard.AnalogRead().current_data[3] << endl;
     }
     //getchar(); getchar();
-    regul.Retract(3);
-    //regul.Landing(4, 5, 0.09);
+    //regul.Retract(0,0.5,1);
     getchar(); getchar();
+    //regul.Landing(4, 5, 0.12);
+   
   
-   // regul.rise(3, 0.25);
-    //regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2).show();
     cout << "PID started" << endl;
     //int volt = 0.55;
     //uwait(30000000);
-   
     
-    regul.XYCard.StopReadStream();
-    double tmp= regul.IntPID_exp(1, 0.1, 100000000, 0);
-    regul.XYCard.StartReadStream();
-    for (int i = 0; i < 30; i++) {
-        tmp = regul.IntPID_exp(1, 0.1, 20000000, tmp);
-        data = regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2);
-        cout << endl << endl << i << endl;
-        cout << " printing data..." << endl;
-        data.print_f("VAC"+to_string(i) + ".dat");
-        cout << "data printed in file VAC" <<i<< ".dat "<< endl;
-    }
-    regul.IntPID_exp(1, 0.07, 0, tmp);
-   
-
-    //regul.TouchScan(1,0.2,-0.01,5,5,0.05,0.05);
+    //regul.R_V_TransistorCalibration2();
+    regul.R_NV_TransistorCalibration();
 
     regul.~Regulator();
     getchar(); getchar();

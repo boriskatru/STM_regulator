@@ -53,10 +53,11 @@ void ADC_Collect::show() {
 }
 
 
-void ADC_Collect::print_f(string filename)
+void ADC_Collect::print_f(string filename, string directory)
 {
+	std::filesystem::create_directories(directory);
 	ofstream file;
-	file.open("../../scans/" + filename, std::ofstream::out);
+	file.open(directory + "/" + filename, std::ofstream::out);
 	/*for (int i = 0; i < ch_count; i++) {
 		cout << "CHANNEL " << i << ":" << "	";
 	}*/
@@ -244,8 +245,8 @@ ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 	if (err < 0) cerr << "Îøèáêà  " << err << " â L502_Recv()" << endl;
 	err = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
 	if (err == -140) {
-		L502_StreamsStop(hnd);
-		L502_StreamsStart(hnd);
+		StopReadStream();
+		StartReadStream();
 		err = L502_Recv(hnd, buf, bufsize, timeout_ms);
 		err = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
 	}

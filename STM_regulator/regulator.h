@@ -36,6 +36,22 @@ inline double LimCatch(double signal, double limit, double max = 25) {
 	if (signal > limit) return signal;
 	else return max;
 }
+inline string get_time_string() {
+	time_t rawtime;
+	struct tm* timeinfo;
+	char buffern[20];								// строка, в которой будет храниться текущая дата
+	time(&rawtime);									// текущая дата в секундах
+#pragma warning(suppress : 4996)
+	timeinfo = localtime(&rawtime);					// текущее локальное время, представленное в структуре
+	strftime(buffern, 20, "%x", timeinfo);
+	string time = "";
+	time += buffern;
+	time += "/";
+	strftime(buffern, 20, "%H_%M", timeinfo);
+
+	time += buffern;
+	return time;
+}
 class PID {
 	
 public:
@@ -145,7 +161,7 @@ public:
 	/// <param name="delay_micro">задержка в мкс</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns> высота касания в В</returns>
-	double Landing(double bias_ = 1, double range = 4.5, double target_V = 0.05, double delay_micro = 0, double djump = MIN_STEP_SIZE);
+	double Landing(double bias_ = 1, double range = 4.5, double target_V = 0.05, double delay_micro = 0, double djump = MIN_STEP_SIZE/5);
 
 	////////////PID РЕГУЛЯТОРЫ////////////
 
@@ -236,5 +252,9 @@ public:
 	/// </summary>
 	/// <param name="cnt">количество циклов</param>
 	void ClearTip(int cnt = 25);
+
+
+	void R_NV_TransistorCalibration(int point_num = 67, double offset_V = 0.35, double inc = 0.003, string dir="../../scans/");
+	void R_V_TransistorCalibration(int point_num, double offset_V, double incr = 0.003, double Vg_min = 0.35, double Vg_max = 0.55, double Vsd_crit = 0.3, int delay_us=600000, string dir = "../../scans/");
 };
 

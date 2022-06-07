@@ -54,7 +54,7 @@ void Regulator::Step(int axis, int dir, double step_size ) {
 
 
 Regulator::Regulator(double i_offset, double noise_limit_V, double frequency , double bias) :
-	XYCard(1, 4, ADC_BUF_SIZE_2),
+	XYCard(1, 2, ADC_BUF_SIZE_2),
 	ZCard(2, 1),
 	noise_limit_V(noise_limit_V),
 	frequency(frequency),
@@ -84,6 +84,7 @@ void Regulator::ClearTip(int cnt) {
 	}
 	ZCard.StopReadStream();
 }
+
 void Regulator::ZStep(int dir, double step_size) {
 	if (dir > 0) {
 		for (double i = 0; i < step_size; i += MIN_STEP_SIZE) {
@@ -111,6 +112,7 @@ void Regulator::Retract(int steps, double step_incr, double rpt) {
 	MHome();
 	double st_sz = max(rise() / 1.25 - 0.2, 0.4);
 	MHome();
+	wait_clear_buf(ZCard);
 	for (double sz = st_sz; sz <= 5; sz += step_incr) {
 		for (int i = 0; i < rpt; i++) {
 			ZCard.SingleAnalogOut(5);
@@ -460,7 +462,110 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 }
 void Regulator::VAC_scan() {}
 
+void Regulator::R_NV_TransistorCalibration(int point_num, double offset_V, double inc, string dir) {
+	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2, ADC_BUF_SIZE_2);
+	vector<double> noise(point_num, point_num);
+	vector<double> volts(point_num, point_num);
+	string timestr = get_time_string();
+	std::filesystem::create_directories(dir + timestr);
+	ofstream file;
+	file.open(dir + timestr + "/" + "Noise_.dat", std::ofstream::out);
+	XYCard.StopReadStream();
+	XYCard.StartReadStream();
+	for (int i = 0; i < point_num; i++) {
+
+		ZCard.SingleAnalogOut(offset_V + i * inc);
+		XYCard.StopReadStream();
+		uwait(600000);
+		XYCard.StartReadStream();
+		
+		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 1000, ADC_BUF_SIZE_2);
+		noise[i] = data.Average(ADC_BUF_SIZE_2 / 2, 0);
+		//volts[i] = data.Average(ADC_BUF_SIZE_2 / 2, 1);
+		cout << endl << endl << i << endl;
+		cout << " printing data..." << endl;
+		file << noise[i] << "   " << offset_V + i * inc << endl;
+		cout << "data printed in file Noise_.dat " << endl;
+
+	}
+}
+void Regulator::R_V_TransistorCalibration(int point_num, double offset_V, double incr, double Vg_min, double Vg_max, double Vsd_crit, int delay_us, string dir) {
+	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2, ADC_BUF_SIZE_2);
+	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
+	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
+	string timestr = get_time_string();
+	double Vg = Vg_min, Vr = 0, Vsd = 0;
+	std::filesystem::create_directories(dir + timestr);
+	ofstream file;
+	XYCard.StopReadStream();
+	XYCard.StartReadStream();
+
+	for (double Vg = Vg_min; Vg < Vg_max; Vg += incr) {
+		file.open("../../scans/" + timestr + "/" + "VAC_Vg_" + to_string(Vg) + ".dat", std::ofstream::out);
+		Vr = 0;
+		ZCard.SingleAnalogOut(Vg, Z_OUT);
+		ZCard.SingleAnalogOut(Vr, Z_OUT_FINE);
+		Vsd = 0;
+		uwait(delay_us);
+		while ((Vsd < Vsd_crit) && (Vr <= 1)) {
 
 
+			ZCard.SingleAnalogOut(Vr, Z_OUT_FINE);
+			XYCard.StopReadStream();
+			uwait(delay_us);
+			XYCard.StartReadStream();
+
+			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 1000, ADC_BUF_SIZE_2);
+			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 0);
+
+			file << Vsd << "   " << Vr << endl;
+			if (Vg > 0.45) Vr += 0.2;
+			else if (Vg > 0.4) Vr += 0.1;
+			else if (Vg > 0.38) Vr += 0.02;
+			else if (Vg > 0.36) Vr += 0.002;
+			else Vr += 10 * MIN_STEP_SIZE;
+
+		}
+		while ((Vr >= -1) && (Vsd > -Vsd_crit)) {
 
 
+			ZCard.SingleAnalogOut(Vr, Z_OUT_FINE);
+			XYCard.StopReadStream();
+			uwait(delay_us);
+			XYCard.StartReadStream();
+
+			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 1000, ADC_BUF_SIZE_2);
+			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 0);
+
+			file << Vsd << "   " << Vr << endl;
+			if (Vg > 0.45) Vr -= 0.2;
+			else if (Vg > 0.4) Vr -= 0.1;
+			else if (Vg > 0.38) Vr -= 0.02;
+			else if (Vg > 0.36) Vr -= 0.002;
+			else Vr -= 10 * MIN_STEP_SIZE;
+		}
+		while ((Vr <= 0)) {
+
+
+			ZCard.SingleAnalogOut(Vr, Z_OUT_FINE);
+			XYCard.StopReadStream();
+			uwait(delay_us);
+			XYCard.StartReadStream();
+
+			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 1000, ADC_BUF_SIZE_2);
+			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 0);
+
+			file << Vsd << "   " << Vr << endl;
+			if (Vg > 0.45) Vr += 0.2;
+			else if (Vg > 0.4) Vr += 0.1;
+			else if (Vg > 0.38) Vr += 0.02;
+			else if (Vg > 0.36) Vr += 0.002;
+			else Vr += 10*MIN_STEP_SIZE;
+		}
+		cout << endl << endl << Vg << endl;
+		cout << " printing data..." << endl;
+		cout << "data printed in file VAC_Vg_" << Vg << ".dat " << endl;
+		file.close();
+	}
+
+}
