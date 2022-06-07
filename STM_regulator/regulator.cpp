@@ -462,7 +462,7 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 }
 void Regulator::VAC_scan() {}
 
-void Regulator::R_NV_TransistorCalibration(int point_num, double offset_V, double inc, string dir) {
+void Regulator::R_NV_TransistorCalibration(int point_num, double offset_V, double incr, string dir) {
 	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2, ADC_BUF_SIZE_2);
 	vector<double> noise(point_num, point_num);
 	vector<double> volts(point_num, point_num);
@@ -489,7 +489,7 @@ void Regulator::R_NV_TransistorCalibration(int point_num, double offset_V, doubl
 
 	}
 }
-void Regulator::R_V_TransistorCalibration(int point_num, double offset_V, double incr, double Vg_min, double Vg_max, double Vsd_crit, int delay_us, string dir) {
+void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_max, double Vsd_crit, int delay_us, string dir) {
 	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2, ADC_BUF_SIZE_2);
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);

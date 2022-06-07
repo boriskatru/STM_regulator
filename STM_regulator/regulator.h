@@ -248,13 +248,29 @@ public:
 	/// <param name="filename"></param>
 	void Calibration(int points_num, ofstream file, string filename = "Calibration.txt");
 	/// <summary>
-	/// Очистка иглы переменным напряжением
+	/// Очистка иглы переменным напряжением. НЕ АКТУАЛЬНО ДЛЯ Lock-in method!!!
 	/// </summary>
 	/// <param name="cnt">количество циклов</param>
 	void ClearTip(int cnt = 25);
 
+	/// <summary>
+	/// Калибровка шумогого сигнала с детектора в зависимости от напряжения на гейте калибровочного транзистора
+	/// </summary>
+	/// <param name="point_num">количество точек</param>
+	/// <param name="offset_V">минимальный гейт транзистора, В</param>
+	/// <param name="incr">шаг калибровки гейта транзистора, В</param>
+	/// <param name="dir">путь сохранения файла</param>
+	void R_NV_TransistorCalibration(int point_num = 67, double offset_V = 0.35, double incr = 0.003, string dir="../../scans/");
 
-	void R_NV_TransistorCalibration(int point_num = 67, double offset_V = 0.35, double inc = 0.003, string dir="../../scans/");
-	void R_V_TransistorCalibration(int point_num, double offset_V, double incr = 0.003, double Vg_min = 0.35, double Vg_max = 0.55, double Vsd_crit = 0.3, int delay_us=600000, string dir = "../../scans/");
+	/// <summary>
+	/// Калибровка сопротивления калибровочного транзистора от напряжения на гейте (по квази-трёхточке)
+	/// </summary>
+	/// <param name="incr">шаг калибровки гейта транзистора, В</param>
+	/// <param name="Vg_min">минимальный гейт транзистора, В</param>
+	/// <param name="Vg_max">максимальный гейт транзистора, В</param>
+	/// <param name="Vsd_crit">критическое падение напряжения на тразисторе</param>
+	/// <param name="delay_us">задержка между измерением точек</param>
+	/// <param name="dir">путь сохранения файла</param>
+	void R_V_TransistorCalibration(double incr = 0.003, double Vg_min = 0.35, double Vg_max = 0.55, double Vsd_crit = 0.3, int delay_us = 600000, string dir = "../../scans/");
 };
 
