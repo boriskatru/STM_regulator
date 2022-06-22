@@ -151,7 +151,7 @@ public:
 	/// <param name="target_V">напряжение детектирования касания</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns>высоту касания в В</returns>
-	double rise(double bias_ = 3, double bwa = 0.1, double target_V = 0.1, double djump = MIN_STEP_SIZE);
+	double rise(double bias_ = 3, double bwa = 0.1, double target_V = 0.1, double djump = MIN_STEP_SIZE/5);
 	/// <summary>
 	/// Процедура лэндинга образца
 	/// </summary>
@@ -161,7 +161,7 @@ public:
 	/// <param name="delay_micro">задержка в мкс</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns> высота касания в В</returns>
-	double Landing(double bias_ = 1, double range = 4.5, double target_V = 0.05, double delay_micro = 0, double djump = MIN_STEP_SIZE/5);
+	double Landing(double bias_ = 1, double range = 4.5, double target_V = 0.05, double delay_micro = 0, double djump = MIN_STEP_SIZE/2);
 
 	////////////PID РЕГУЛЯТОРЫ////////////
 
@@ -182,7 +182,7 @@ public:
 	/// <param name="duration_us">длительность периода регуляции</param>
 	/// <param name="start_offset"> смещение оси Z в начале скана </param>
 	/// <param name="I_to_nA"> коэффициент конвертации сигнала напряжения в ток </param>
-	double IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_pos = 0, double I_to_nA = 10, double touch_lim = 0.002);
+	double IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_pos = 0, double I_to_nA = 10, double touch_lim = 0.0015);
 	/// <summary>
 	/// регуляция на основе внешнего ПИД с подъёмом между шагами:
 	/// </summary>
@@ -256,11 +256,11 @@ public:
 	/// <summary>
 	/// Калибровка шумогого сигнала с детектора в зависимости от напряжения на гейте калибровочного транзистора
 	/// </summary>
-	/// <param name="point_num">количество точек</param>
-	/// <param name="offset_V">минимальный гейт транзистора, В</param>
+	/// <param name="Vg_min">>минимальный гейт транзистора, В</param>
+	/// <param name="Vg_max">максимальный гейт транзистора, В</param>
 	/// <param name="incr">шаг калибровки гейта транзистора, В</param>
 	/// <param name="dir">путь сохранения файла</param>
-	void R_NV_TransistorCalibration(int point_num = 67, double offset_V = 0.35, double incr = 0.003, string dir="../../scans/");
+	void R_NV_TransistorCalibration(double Vg_min = 0.32, double Vg_max = 0.56, double incr = 0.003, string dir="../../scans/");
 
 	/// <summary>
 	/// Калибровка сопротивления калибровочного транзистора от напряжения на гейте (по квази-трёхточке)
@@ -271,6 +271,6 @@ public:
 	/// <param name="Vsd_crit">критическое падение напряжения на тразисторе</param>
 	/// <param name="delay_us">задержка между измерением точек</param>
 	/// <param name="dir">путь сохранения файла</param>
-	void R_V_TransistorCalibration(double incr = 0.003, double Vg_min = 0.35, double Vg_max = 0.55, double Vsd_crit = 0.3, int delay_us = 600000, string dir = "../../scans/");
+	void R_V_TransistorCalibration(double incr = 0.003, double Vg_min = 0.32, double Vg_max = 0.56, double Vsd_crit = 0.3, int delay_us = 600000, string dir = "../../scans/");
 };
 

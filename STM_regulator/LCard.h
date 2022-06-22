@@ -11,7 +11,7 @@
 
 #define MAX_MODULES_CNT 3
 #define ADC_BUF_SIZE_1 48	//размер короткого буфера платы оси Z для быстрого чтения и обратной реакции
-#define ADC_BUF_SIZE_2 800000 //размер длинного буфера платы оси XY  для чтения ВАХ
+#define ADC_BUF_SIZE_2 4000000 //размер длинного буфера платы оси XY  для чтения ВАХ
 #define S_CNT_CRIT_NUM 3
 #define RECIVE_COUNT_TIMEOUT 5000
 

@@ -54,7 +54,7 @@ void Regulator::Step(int axis, int dir, double step_size ) {
 
 
 Regulator::Regulator(double i_offset, double noise_limit_V, double frequency , double bias) :
-	XYCard(1, 2, ADC_BUF_SIZE_2),
+	XYCard(1, 4, ADC_BUF_SIZE_2),
 	ZCard(2, 1),
 	noise_limit_V(noise_limit_V),
 	frequency(frequency),
@@ -65,6 +65,7 @@ Regulator::Regulator(double i_offset, double noise_limit_V, double frequency , d
 
 }
 Regulator::~Regulator() {
+	MHome();
 	ZCard.SingleAnalogOut(0, 0);
 	//ZCard.SingleAnalogOut(0, 1);
 	ZCard.~LCard(); XYCard.~LCard();
@@ -286,7 +287,7 @@ void Regulator::ExtPID(double bias_, double delay, double bwa, double crit_V, do
 
 
 
-
+/////////
 
 VAC Regulator::VAC_(double max, double min, double step, int name, double delay_us) {
 	VAC  vac((max - min) / step);
@@ -462,8 +463,9 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 }
 void Regulator::VAC_scan() {}
 
-void Regulator::R_NV_TransistorCalibration(int point_num, double offset_V, double incr, string dir) {
+void Regulator::R_NV_TransistorCalibration(double Vg_min , double Vg_max , double incr, string dir) {
 	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2, ADC_BUF_SIZE_2);
+	int point_num = (Vg_max - Vg_min) / incr;
 	vector<double> noise(point_num, point_num);
 	vector<double> volts(point_num, point_num);
 	string timestr = get_time_string();
@@ -474,17 +476,17 @@ void Regulator::R_NV_TransistorCalibration(int point_num, double offset_V, doubl
 	XYCard.StartReadStream();
 	for (int i = 0; i < point_num; i++) {
 
-		ZCard.SingleAnalogOut(offset_V + i * inc);
+		ZCard.SingleAnalogOut(Vg_min + i * incr);
 		XYCard.StopReadStream();
 		uwait(600000);
 		XYCard.StartReadStream();
 		
-		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 1000, ADC_BUF_SIZE_2);
-		noise[i] = data.Average(ADC_BUF_SIZE_2 / 2, 0);
-		//volts[i] = data.Average(ADC_BUF_SIZE_2 / 2, 1);
+		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
+		noise[i] = data.Average(ADC_BUF_SIZE_2 / 2, 2);
+		volts[i] = data.Average(ADC_BUF_SIZE_2 / 2, 3);
 		cout << endl << endl << i << endl;
 		cout << " printing data..." << endl;
-		file << noise[i] << "   " << offset_V + i * inc << endl;
+		file << noise[i] << "   " << volts[i] /*Vg_min + i * incr*/ << endl;
 		cout << "data printed in file Noise_.dat " << endl;
 
 	}
@@ -494,7 +496,7 @@ void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
 	string timestr = get_time_string();
-	double Vg = Vg_min, Vr = 0, Vsd = 0;
+	double Vg = Vg_min, Vr =  0, Vg_m = 0, Vsd = 0;
 	std::filesystem::create_directories(dir + timestr);
 	ofstream file;
 	XYCard.StopReadStream();
@@ -515,14 +517,15 @@ void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_
 			uwait(delay_us);
 			XYCard.StartReadStream();
 
-			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 1000, ADC_BUF_SIZE_2);
-			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 0);
+			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
+			Vsd = data.Average(ADC_BUF_SIZE_2 / 4, 2);
+			Vg_m = data.Average(ADC_BUF_SIZE_2 / 4, 3);
 
-			file << Vsd << "   " << Vr << endl;
+			file << Vsd << "   " << Vr << "   " << Vg_m << endl;
 			if (Vg > 0.45) Vr += 0.2;
 			else if (Vg > 0.4) Vr += 0.1;
 			else if (Vg > 0.38) Vr += 0.02;
-			else if (Vg > 0.36) Vr += 0.002;
+			else if (Vg > 0.36) Vr += 0.0025;
 			else Vr += 10 * MIN_STEP_SIZE;
 
 		}
@@ -534,14 +537,15 @@ void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_
 			uwait(delay_us);
 			XYCard.StartReadStream();
 
-			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 1000, ADC_BUF_SIZE_2);
-			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 0);
+			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
+			Vsd = data.Average(ADC_BUF_SIZE_2 / 4, 2);
+			Vg_m = data.Average(ADC_BUF_SIZE_2 / 4, 3);
 
-			file << Vsd << "   " << Vr << endl;
+			file << Vsd << "   " << Vr << "   " << Vg_m << endl;
 			if (Vg > 0.45) Vr -= 0.2;
 			else if (Vg > 0.4) Vr -= 0.1;
 			else if (Vg > 0.38) Vr -= 0.02;
-			else if (Vg > 0.36) Vr -= 0.002;
+			else if (Vg > 0.36) Vr -= 0.0025;
 			else Vr -= 10 * MIN_STEP_SIZE;
 		}
 		while ((Vr <= 0)) {
@@ -552,14 +556,15 @@ void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_
 			uwait(delay_us);
 			XYCard.StartReadStream();
 
-			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 1000, ADC_BUF_SIZE_2);
-			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 0);
+			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
+			Vsd = data.Average(ADC_BUF_SIZE_2 / 4, 2);
+			Vg_m = data.Average(ADC_BUF_SIZE_2 / 4, 3);
 
-			file << Vsd << "   " << Vr << endl;
+			file << Vsd << "   " << Vr << "   " << Vg_m << endl;
 			if (Vg > 0.45) Vr += 0.2;
 			else if (Vg > 0.4) Vr += 0.1;
 			else if (Vg > 0.38) Vr += 0.02;
-			else if (Vg > 0.36) Vr += 0.002;
+			else if (Vg > 0.36) Vr += 0.0025;
 			else Vr += 10*MIN_STEP_SIZE;
 		}
 		cout << endl << endl << Vg << endl;

@@ -40,17 +40,37 @@ int main()
         cout << "N3 " << i << " value: " << regul.ZCard.AnalogRead().current_data[3] << endl;
     }
     //getchar(); getchar();
-    //regul.Retract(0,0.5,1);
+    regul.R_NV_TransistorCalibration();
+    //regul.R_V_TransistorCalibration();
+    //regul.Retract(20,0.5,1);
+
     getchar(); getchar();
-    //regul.Landing(4, 5, 0.12);
+   //regul.Landing(1, 5, 0.05);
+   string timestr = get_time_string();
+   data = regul.XYCard.AnalogRead(ADC_BUF_SIZE_2 / 20, ADC_BUF_SIZE_2/100);
+   regul.XYCard.StopReadStream();
+   data.print_f("VANC_test.dat", "../../scans/" + timestr);
+   cout << timestr << endl;
+   cout << "PID started" << endl;
+   double height =  regul.IntPID_exp(0.5, 0.6, 300000000, 0);
    
-  
-    cout << "PID started" << endl;
+   for (int i = 0; i < 20; i++)
+   {    
+       regul.XYCard.StartReadStream();       
+       regul.ZCard.StartReadStream();              
+       height = regul.IntPID_exp(0.3, 0.6, 20000000, height);
+       data = regul.XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2, ADC_BUF_SIZE_2);
+       regul.XYCard.StopReadStream();
+       regul.ZCard.StopReadStream();
+       data.print_f("VANC_" + to_string(i) + ".dat", "../../scans/" + timestr);
+       cout << "done   " << i << "VANCS" << endl;
+   }
+    
     //int volt = 0.55;
     //uwait(30000000);
     
     //regul.R_V_TransistorCalibration2();
-    regul.R_NV_TransistorCalibration();
+    //regul.R_NV_TransistorCalibration(80,0.35,0.005);
 
     regul.~Regulator();
     getchar(); getchar();
