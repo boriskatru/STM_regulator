@@ -64,6 +64,11 @@ public:
 	double tmp;
 	PID(double P = Pc, double I = Ic, double D = Dc);
 	~PID();
+	/// <summary>
+	///	Задаёт начальную позицию регулятора, вычисляя integral
+	/// </summary>
+	/// <param name="pos">  задаваемая начальная позиция</param>
+	/// <param name="offset"></param>
 	void set_zero_pos(double pos, double offset = 0);
 	/// <summary>
 	/// Функция вычисления PID сигнала
@@ -104,7 +109,13 @@ public:
 	double noise_limit_V;	//шум конвертера
 	double bias;			//напряжение на игле
 	double current_offset;	//оффсет по току
-
+	/// <summary>
+	/// Конструктор объектра трегулятора
+	/// </summary>
+	/// <param name="i_offset">оффсет тока с конвертера с иглы</param>
+	/// <param name="noise_limit_V">порог чуствительности к уму конвертера</param>
+	/// <param name="frequency">частота конвертера</param>
+	/// <param name="bias"></param>
 	Regulator(double i_offset = 0, double noise_limit_V = 0.05, double frequency = 10000, double bias = 0.3);
 	~Regulator();
 
@@ -271,6 +282,6 @@ public:
 	/// <param name="Vsd_crit">критическое падение напряжения на тразисторе</param>
 	/// <param name="delay_us">задержка между измерением точек</param>
 	/// <param name="dir">путь сохранения файла</param>
-	void R_V_TransistorCalibration(double incr = 0.003, double Vg_min = 0.32, double Vg_max = 0.56, double Vsd_crit = 0.3, int delay_us = 600000, string dir = "../../scans/");
+	void R_V_TransistorCalibration(double incr = 0.003, double Vg_min = 0.32, double Vg_max = 0.56, double Vsd_crit = 0.02, int delay_us = 600000, string dir = "../../scans/");
 };
 
