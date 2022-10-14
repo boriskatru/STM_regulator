@@ -9,7 +9,7 @@ ADC_Collect::ADC_Collect(int ch_count, int ADC_BUF_SIZE ) :
 	s_ch_bufsz(ADC_BUF_SIZE / ch_count),
 	err_cnt(0),
 	input(ch_count, vector<double>(ADC_BUF_SIZE / ch_count, 0))/*, swap(0)*/ {
-	current_data = (double*)malloc(sizeof(double) * ADC_BUF_SIZE);
+	current_data = (double*)calloc( ADC_BUF_SIZE, sizeof(double));
 	for (int i = 0; i < ADC_BUF_SIZE; i++) {
 		current_data[i] = 0;
 	}
@@ -22,6 +22,7 @@ void ADC_Collect::parse_channels() {
 			input[i][k] = current_data[ch_count * k + i];
 		}
 	}
+	 cout << recv_cnt<< endl;
 	if (is_same)
 		err_cnt++;
 	else err_cnt = 0;
@@ -71,7 +72,8 @@ void ADC_Collect::print_f(string filename, string directory)
 	
 }
 
-LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(ADC_BUF_SIZE), data(ADC_CH_COUNT, ADC_BUF_SIZE), cur_volt(2, 0), next_lch(0){
+LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), data(ADC_CH_COUNT, ADC_BUF_SIZE), next_lch(0) {
+	
 	buf = (uint32_t*)calloc(ADC_BUF_SIZE, sizeof(uint32_t));
 	get_list_res = L502_GetSerialList(serial_list, MAX_MODULES_CNT, L502_GETDEVS_FLAGS_ONLY_NOT_OPENED, NULL);
 	if (get_list_res < 0)
@@ -85,8 +87,10 @@ LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(AD
 	else
 	{
 		cout << "Найдено " << get_list_res << " модулей LCard " << endl;
-		cout << "serial_1= " << serial_list[0] << endl << "serial_2= " << serial_list[1] << endl;
-		/*getchar();getchar();*/
+		for (int i = 0; i < get_list_res; i++) {
+			cout << "serial_" << i <<" =   " << serial_list[0] << endl;
+			/*getchar();getchar();*/
+		}
 
 	}
 	hnd = L502_Create();
@@ -94,49 +98,49 @@ LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(AD
 	serial = serial_list[card_No - 1];
 
 	cout << "Card" << card_No << "  have serial  " << serial << endl;
-	err = L502_Close(hnd);
-	if (err != 0) cerr << "Ошибка  " << err << "  в L502_Close()" << endl;
-	err = L502_Open(hnd, serial);
-	if (err != 0) cerr << "Ошибка  " << err << "  в L502_Open()" << endl;
+	error = L502_Close(hnd);
+	if (error != 0) cerr << "Ошибка  " << error << "  в L502_Close()" << endl;
+	error = L502_Open(hnd, serial);
+	if (error != 0) cerr << "Ошибка  " << error << "  в L502_Open()" << endl;
 
-	err = L502_SetLChannelCount(hnd, ADC_CH_COUNT);
+	error = L502_SetLChannelCount(hnd, ADC_CH_COUNT);
 	for (int i = 0; i < ADC_CH_COUNT; i++) {
-		if (!err)
+		if (!error)
 		{
 			/* первый логический канал соответствует измерению 1 канала
 			относительно общей земли */
-			err = L502_SetLChannel(hnd, i, i, L502_LCH_MODE_COMM, L502_ADC_RANGE_10, 0);
-			if (err)
-				cout << "Ошибка в L502_SetLChannel()" << err << endl;
+			error = L502_SetLChannel(hnd, i, i, L502_LCH_MODE_COMM, L502_ADC_RANGE_10, 0);
+			if (error)
+				cout << "Ошибка в L502_SetLChannel()" << error << endl;
 		}
 	}
 
-	err = L502_AsyncOutDac(hnd, L502_DAC_CH1, 0.0, 0x0001) + L502_AsyncOutDac(hnd, L502_DAC_CH2, 0.0, 0x0001);
-	while (err != 0) {
-		cerr << "Ошибка  " << err / 2 << "  в L502_AsyncOutDac()" << endl;
-		err = L502_Close(hnd);
-		if (err != 0) cerr << "Ошибка  " << err << "  в L502_Close()" << endl;
-		err = L502_Open(hnd, serial);
-		if (err != 0) cerr << "Ошибка  " << err << "  в L502_Open()" << endl;
-		err = L502_AsyncOutDac(hnd, L502_DAC_CH1, 0.0, 0x0001) + L502_AsyncOutDac(hnd, L502_DAC_CH2, 0.0, 0x0001);
+	error = L502_AsyncOutDac(hnd, L502_DAC_CH1, 0.0, 0x0001) + L502_AsyncOutDac(hnd, L502_DAC_CH2, 0.0, 0x0001);
+	while (error != 0) {
+		cerr << "Ошибка  " << error  << "  в L502_AsyncOutDac()" << endl;
+		error = L502_Close(hnd);
+		if (error != 0) cerr << "Ошибка  " << error << "  в L502_Close()" << endl;
+		error = L502_Open(hnd, serial);
+		if (error != 0) cerr << "Ошибка  " << error << "  в L502_Open()" << endl;
+		error = L502_AsyncOutDac(hnd, L502_DAC_CH1, 0.0, 0x0001) + L502_AsyncOutDac(hnd, L502_DAC_CH2, 0.0, 0x0001);
 	}
-	err = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ, &ADC_FRAME_FREQ);
-	if (err != 0) cerr << "Ошибка  " << err << " в L502_SetAdcFreq()" << endl;
+	error = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ, &ADC_FRAME_FREQ);
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_SetAdcFreq()" << endl;
 	else cout << "ADC_COLLECT_FREQ = " << ADC_COLLECT_FREQ << endl << "ADC_FRAME_FREQ = " << ADC_FRAME_FREQ << endl;
 
-	err = L502_StreamsDisable(hnd, L502_STREAM_DIN);
-	err = L502_StreamsDisable(hnd, L502_STREAM_DOUT);
-	if (err != 0) cerr << "Ошибка  " << err << " в L502_StreamsDisable()" << endl;
-	err = L502_StreamsEnable(hnd, L502_STREAM_ADC);
-	err = L502_StreamsEnable(hnd, L502_STREAM_DAC1);
-	err = L502_StreamsEnable(hnd, L502_STREAM_DAC2);
-	if (err != 0) cerr << "Ошибка  " << err << " в L502_StreamsEnable()" << endl;
+	error = L502_StreamsDisable(hnd, L502_STREAM_DIN);
+	error = L502_StreamsDisable(hnd, L502_STREAM_DOUT);
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_StreamsDisable()" << endl;
+	error = L502_StreamsEnable(hnd, L502_STREAM_ADC);
+	error = L502_StreamsEnable(hnd, L502_STREAM_DAC1);
+	error = L502_StreamsEnable(hnd, L502_STREAM_DAC2);
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_StreamsEnable()" << endl;
 	L502_SetDmaIrqStep(hnd, L502_DMA_CH_IN, 9000000);
 	L502_SetDmaIrqStep(hnd, L502_DMA_CH_OUT, 9000000);
 	L502_SetDmaBufSize(hnd, L502_DMA_CH_IN, ADC_BUF_SIZE);
 	L502_SetDmaBufSize(hnd, L502_DMA_CH_OUT, 16);
 	L502_Configure(hnd, 0);
-	if (err != 0) cerr << "Ошибка  " << err << " в L502_Configure()" << endl;
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_Configure()" << endl;
 	
 	
 }
@@ -146,8 +150,8 @@ LCard::LCard(int card_No , int ADC_CH_COUNT, int ADC_BUF_SIZE) : ADC_BUF_SIZE(AD
 /// <param name="flags"> флаг настройки </param>
 /// 
 void LCard::SetMode(uint32_t flags) {
-	err = L502_Configure(hnd, flags);
-	if (err != 0) cerr << "Ошибка  " << err << " в L502_Configure(" << flags << ")" << endl;
+	error = L502_Configure(hnd, flags);
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_Configure(" << flags << ")" << endl;
 }
 /// <summary>
 /// Единичный вывод на канал DAC
@@ -155,69 +159,59 @@ void LCard::SetMode(uint32_t flags) {
 /// <param name="data"> Задаваемый сигнал напряжения</param>
 /// <param name="channel"> Номер канала DAC </param>
 /// <param name="flags"></param>
-void LCard::SingleAnalogOut(double data, uint32_t channel , uint32_t flags ) {
-	err = L502_AsyncOutDac(hnd, channel, data, flags);
+void LCard::SingleAnalogOut(double data, unsigned int channel , double timeout ) {
+	error = L502_AsyncOutDac(hnd, channel, data, ANALOG_OUT_FLAG);
 	cur_volt[channel] = data;
-	while (err != 0) {
-		cerr << "Ошибка  " << err << "  в L502_AsyncOutDac()" << endl;
-		err = L502_Close(hnd);
-		if (err != 0) cerr << "Ошибка  " << err << "  в L502_Close()" << endl;
-		err = L502_Open(hnd, serial);
-		if (err != 0) cerr << "Ошибка  " << err << "  в L502_Open()" << endl;
-		err = L502_AsyncOutDac(hnd, channel, data, 0x0001);
+	while (error != 0) {
+		cerr << "Ошибка  " << error << "  в L502_AsyncOutDac()" << endl;
+		error = L502_Close(hnd);
+		if (error != 0) cerr << "Ошибка  " << error << "  в L502_Close()" << endl;
+		error = L502_Open(hnd, serial);
+		if (error != 0) cerr << "Ошибка  " << error << "  в L502_Open()" << endl;
+		error = L502_AsyncOutDac(hnd, channel, data, ANALOG_OUT_FLAG);
 	}
 }
 void LCard::SingleDigitalOut(uint32_t val, uint32_t mask) {
-	err = L502_AsyncOutDig(hnd, val, mask);
-	if (err != 0) cerr << "Ошибка  " << err << " в L502_AsyncOutDig(" << mask << ")" << endl;
+	error = L502_AsyncOutDig(hnd, val, mask);
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_AsyncOutDig(" << mask << ")" << endl;
 }
-double LCard::AsyncSingleAnalogRead(int channel, double freq , uint32_t tout , uint32_t flags ) {
+double LCard::SingleAnalogRead(int channel, double freq , uint32_t tout , uint32_t flags ) {
 	if ((freq != -1) && (freq != ADC_COLLECT_FREQ)) {
 		ADC_COLLECT_FREQ = freq;
 		ADC_FRAME_FREQ = freq / 2;
-		err = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ,
+		error = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ,
 			&ADC_FRAME_FREQ);
-		if (err != 0) cerr << "Ошибка  " << err << " в L502_SetAdcFreq(" << freq << ")" << endl;
+		if (error != 0) cerr << "Ошибка  " << error << " в L502_SetAdcFreq(" << freq << ")" << endl;
 		else cout << "ADC_COLLECT_FREQ = " << ADC_COLLECT_FREQ << endl << "ADC_FRAME_FREQ = " << ADC_FRAME_FREQ << endl;
 		//getchar(); getchar();
 	}
-	err = L502_AsyncGetAdcFrame(hnd, flags, tout, data.current_data);
-	//if (err != 0) cerr << "Ошибка  " << err << " в L502_AsyncGetAdcFrame(" << flags << ")" << endl;
+	error = L502_AsyncGetAdcFrame(hnd, flags, tout, data.current_data);
+	read_cnt++;
+	//if (error != 0) cerr << "Ошибка  " << error << " в L502_AsyncGetAdcFrame(" << flags << ")" << endl;
 	return data.current_data[channel];
+}
+double LCard::SingleAnalogRead(int channel, double timeout)
+{
+	return SingleAnalogRead(channel, -1, 1U, 1U);
 }
 double* LCard::AsyncAnalogRead(double freq , uint32_t tout , uint32_t flags ) {
 	if ((freq != -1) && (freq != ADC_COLLECT_FREQ)) {
 		ADC_COLLECT_FREQ = freq;
 		ADC_FRAME_FREQ = freq / 2;
-		err = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ,
+		error = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ,
 			&ADC_FRAME_FREQ);
-		if (err != 0) cerr << "Ошибка  " << err << " в L502_SetAdcFreq(" << freq << ")" << endl;
+		if (error != 0) cerr << "Ошибка  " << error << " в L502_SetAdcFreq(" << freq << ")" << endl;
 		else cout << "ADC_COLLECT_FREQ = " << ADC_COLLECT_FREQ << endl << "ADC_FRAME_FREQ = " << ADC_FRAME_FREQ << endl;
 	}
-	err = L502_AsyncGetAdcFrame(hnd, flags, tout, data.current_data);
-	if (err != 0) cerr << "Ошибка  " << err << " в L502_AsyncGetAdcFrame(" << flags << ")" << endl;
+	error = L502_AsyncGetAdcFrame(hnd, flags, tout, data.current_data);
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_AsyncGetAdcFrame(" << flags << ")" << endl;
 	return data.current_data;
 }
 double LCard::SingleDigitalRead() {
 	cout << "Эта функция не написана, да и не особо нужна" << endl;
+	return 0;
 }
-/// <summary>
-/// Экстренный отвод иглы
-/// </summary>
-void LCard::BackstepZ() {
-	double cur_h = cur_volt[0];
-	for (double i = cur_h - 0.05; i > 0; i -= 0.00005) {
-		SingleAnalogOut(i);
-	}
 
-	for (int k = 0; k < 6; k++) {
-		SingleAnalogOut(5);
-		for (double i = min((cur_h / 1.5 - 0.2 + k / 2), 5); i > 0; i -= 0.0003) {
-			SingleAnalogOut(i);
-		}
-	}
-
-}
 /// <summary>
 /// Чтение сигнала с платы. Возвращает обработанную информацию в data
 /// </summary>
@@ -225,9 +219,9 @@ ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 	StartReadStream();
 	
 	int recv_zero_cnt = 0;
-	err = L502_Recv(hnd, buf, bufsize, timeout_ms);
-	while (err == 0) {
-		err = L502_Recv(hnd, buf, bufsize, timeout_ms);
+	error = L502_Recv(hnd, buf, bufsize, timeout_ms);
+	while (error == 0) {
+		error = L502_Recv(hnd, buf, bufsize, timeout_ms);
 		recv_zero_cnt++;
 		if (recv_zero_cnt > RECIVE_COUNT_TIMEOUT) {
 			if (serial == serial_1)
@@ -240,57 +234,49 @@ ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 		}
 	}
 
-	count_ADC_data = err;
+	count_ADC_data = error;
 
-	if (err < 0) cerr << "Ошибка  " << err << " в L502_Recv()" << endl;
-	err = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
-	if (err == -140) {
+	if (error < 0) cerr << "Ошибка  " << error << " в L502_Recv()" << endl;
+	error = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
+	if (error == -140) {
 		StopReadStream();
 		StartReadStream();
-		err = L502_Recv(hnd, buf, bufsize, timeout_ms);
-		err = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
+		error = L502_Recv(hnd, buf, bufsize, timeout_ms);
+		error = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
 	}
-	else if ((err != 0) && (err != -11)) cerr << "Ошибка  " << err << " в L502_ProcessAdcData()" << endl;
-	data.parse_channels();
+	else if ((error != 0) && (error != -11)) cerr << "Ошибка  " << error << " в L502_ProcessAdcData()" << endl;
 	data.recv_cnt = count_ADC_data;
+	data.parse_channels();	
 	return data;
 
 }
 void LCard::StopReadStream() {
 	is_reading = 0;
 
-	err = L502_StreamsStop(hnd);
-	if (err != 0) cerr << "Ошибка  " << err << " в L502_StreamsStop()" << endl;
+	error = L502_StreamsStop(hnd);
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_StreamsStop()" << endl;
 }
 void LCard::StartReadStream() {
 	if (is_reading == 0) {
-		err = L502_StreamsStart(hnd);
-		if (err != 0) {
-			cerr << "Ошибка  " << err << " в L502_StreamsStart()" << endl;
+		error = L502_StreamsStart(hnd);
+		if (error != 0) {
+			cerr << "Ошибка  " << error << " в L502_StreamsStart()" << endl;
 
 		}
 		else { is_reading = 1; }
 	}
 }
-LCard::~LCard() {
+void LCard::FullStop()
+{
 	StopReadStream();
-	err = L502_Close(hnd);
-	if (err != 0) cerr << "Ошибка  " << err << "  в L502_Close()" << endl;
-	err = L502_Free(hnd);
-	if (err != 0) cerr << "Ошибка  " << err << "  в L502_Free()" << endl;
+	SingleAnalogOut(0, 0U);
+	SingleAnalogOut(0, 1U);
+}
+LCard::~LCard() {
+	FullStop();
+	error = L502_Close(hnd);
+	if (error != 0) cerr << "Ошибка  " << error << "  в L502_Close()" << endl;
+	error = L502_Free(hnd);
+	if (error != 0) cerr << "Ошибка  " << error << "  в L502_Free()" << endl;
 }
 
-/*LCard(char* _serial) {
-		serial = _serial;
-		hnd = L502_Create();
-		L502_Close(hnd);
-		err = L502_Open(hnd, serial);
-		if (err != 0) cerr << "Ошибка  " << err << "  в L502_Open()" << endl;
-	}
-	LCard(t_l502_hnd _hnd, char* _serial) {
-		serial = _serial;
-		hnd = _hnd;
-		L502_Close(hnd);
-		err = L502_Open(hnd, serial);
-		if (err != 0) cerr << "Ошибка  " << err << "  в L502_Open()" << endl;
-	}*/

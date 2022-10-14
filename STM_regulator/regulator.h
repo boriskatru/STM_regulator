@@ -15,6 +15,7 @@
 #include "wait_bh.h"
 #include "Scans.h"
 #include "gwyfile.h"
+#include "NICard.h"
 
 using namespace std;
 
@@ -90,7 +91,7 @@ class Regulator
 	/// </summary>
 	/// <param name="card">плата дл€ очистки</param>
 	/// <param name="cnt">количество циклов очистки(~100 us на очистку)</param>
-	void wait_clear_buf(LCard& card, int cnt = 30);
+	void wait_clear_buf(Card& card, int cnt = 30);
 	/// <summary>
 	/// ≈диничный шаг пьезиков по выбранной оси
 	/// </summary>
@@ -100,7 +101,8 @@ class Regulator
 	void Step(int axis, int dir, double step_size = 5);
 
 public:
-	LCard  ZCard, XYCard;
+	LCard XYCard;
+	NICard ZCard;
 	PiezoPositioners piezo;
 	PID pid;
 	

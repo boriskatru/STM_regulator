@@ -124,7 +124,7 @@ double PiezoPositioners::Position(char axis , char unit ) {
 /// <param name="ZCard"> плата оси Z </param>
 /// <param name="XYCard"> плата осей XY</param>
 /// <param name="unit"> единицы измерения</param>
-void PiezoPositioners::Jump(Vecter step, LCard& ZCard, LCard& XYCard, const char unit ) {
+void PiezoPositioners::Jump(Vecter step, Card& ZCard, Card& XYCard, const char unit ) {
 	if ((unit == 'V') || (unit == 'v') || (unit == 'U') || (unit == 'u')) {
 		UpdatePos(step + position_V, unit);
 	}
@@ -145,7 +145,7 @@ void PiezoPositioners::Jump(Vecter step, LCard& ZCard, LCard& XYCard, const char
 /// <param name="ZCard"> плата оси Z </param>
 /// <param name="XYCard"> плата осей XY</param>
 /// <param name="unit"> единицы измерения</param>
-void PiezoPositioners::JumpTo(Vecter position, LCard& ZCard, LCard& XYCard, const char unit) {
+void PiezoPositioners::JumpTo(Vecter position, Card& ZCard, Card& XYCard, const char unit) {
 
 	UpdatePos(position, unit);
 	if (last_move.z_proj != 0)
@@ -161,7 +161,7 @@ void PiezoPositioners::JumpTo(Vecter position, LCard& ZCard, LCard& XYCard, cons
 /// <param name="step"> дистанция перемещения по оси Z </param>
 /// <param name="ZCard"> плата оси Z </param>
 /// <param name="unit"> единицы измерения</param>
-void PiezoPositioners::ZJump(double step, LCard& ZCard, const char unit) {
+void PiezoPositioners::ZJump(double step, Card& ZCard, const char unit) {
 	if ((unit == 'V') || (unit == 'v') || (unit == 'U') || (unit == 'u')) {
 		UpdatePos(step + position_V.z_proj, unit);
 	}
@@ -178,7 +178,7 @@ void PiezoPositioners::ZJump(double step, LCard& ZCard, const char unit) {
 /// <param name="position"> пункт назначения оси Z </param>
 /// <param name="ZCard"> плата оси Z </param>
 /// <param name="unit"> единицы измерения</param>
-void PiezoPositioners::ZJumpTo(double position, LCard& ZCard, const char unit) {
+void PiezoPositioners::ZJumpTo(double position, Card& ZCard, const char unit) {
 
 	UpdatePos(position, unit);
 	if (last_move.z_proj != 0)
@@ -192,7 +192,7 @@ void PiezoPositioners::ZJumpTo(double position, LCard& ZCard, const char unit) {
 /// <param name="ZCard"> плата оси Z </param>
 /// <param name="fine_range"> диапазон регулировки FINE составляющей </param>
 /// <param name="unit"> единицы измерения</param>
-void PiezoPositioners::ZFJumpTo(double position, LCard& ZCard, double fine_range, const char unit)
+void PiezoPositioners::ZFJumpTo(double position, Card& ZCard, double fine_range, const char unit)
 {
 	if (position < V_downlimit.z_proj) position = V_downlimit.z_proj; 
 	if (position > V_uplimit.z_proj)  position = V_uplimit.z_proj; 
@@ -229,7 +229,7 @@ void PiezoPositioners::ZFJumpTo(double position, LCard& ZCard, double fine_range
 /// <param name="ZCard"> плата оси Z </param>
 /// <param name="XYCard"> плата осей XY</param>
 /// <param name="check">функция/триггер проверки возможности перемещения</param>
-void PiezoPositioners::Move(Vecter distance, double delay_micro, double djump, LCard& ZCard, LCard& XYCard, double (*check)(double) ) {
+void PiezoPositioners::Move(Vecter distance, double delay_micro, double djump, Card& ZCard, Card& XYCard, double (*check)(double) ) {
 	Vecter final = (position_V + distance);
 	int steps = trunc((distance / djump).len());
 	for (int i = 0; i < steps; i++) {
@@ -247,7 +247,7 @@ void PiezoPositioners::Move(Vecter distance, double delay_micro, double djump, L
 /// <param name="ZCard"> плата оси Z </param>
 /// <param name="XYCard"> плата осей XY</param>
 /// <param name="check">функция/триггер проверки возможности перемещения</param>
-void PiezoPositioners::MoveTo(Vecter destination, double delay_micro, double djump, LCard& ZCard, LCard& XYCard, double (*check)(double) ) {
+void PiezoPositioners::MoveTo(Vecter destination, double delay_micro, double djump, Card& ZCard, Card& XYCard, double (*check)(double) ) {
 	Vecter relative = destination - position_V;
 	int steps = trunc((relative / djump).len());
 	for (int i = 0; i < steps; i++) {

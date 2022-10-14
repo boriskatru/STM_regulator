@@ -32,12 +32,9 @@ int main()
     for (int i = 0; i < regul.XYCard.data.ch_count; i++) {
         cout << "ch " << i << " value: " << data.Average(8, i) << endl;
     }
-    ADC_Collect data1 = regul.ZCard.AnalogRead();
+    double data1 = regul.ZCard.SingleAnalogRead();
     for (int i = 0; i < 1; i++) {
-        cout << "N0 " << i << " value: " << regul.ZCard.AnalogRead().current_data[0] << endl;
-        cout << "N1 " << i << " value: " << regul.ZCard.AnalogRead().current_data[1] << endl;
-        cout << "N2 " << i << " value: " << regul.ZCard.AnalogRead().current_data[2] << endl;
-        cout << "N3 " << i << " value: " << regul.ZCard.AnalogRead().current_data[3] << endl;
+        cout << "N0 " << i << " value: " << regul.ZCard.SingleAnalogRead()<< endl;
     }
 
     /////////////////КОНЕЦ ТЕСТА//////////////////////////

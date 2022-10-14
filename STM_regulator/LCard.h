@@ -8,12 +8,9 @@
 #include <filesystem>
 #include "wait_bh.h"
 #include "l502api.h"
+#include "Card.h"
 
-#define MAX_MODULES_CNT 3
-#define ADC_BUF_SIZE_1 48	//размер короткого буфера платы оси Z для быстрого чтения и обратной реакции
-#define ADC_BUF_SIZE_2 40000 //размер длинного буфера платы оси XY  для чтения ВАХ
-#define S_CNT_CRIT_NUM 3
-#define RECIVE_COUNT_TIMEOUT 5000
+#define ANALOG_OUT_FLAG 0x0001
 
 
 static char serial_list[MAX_MODULES_CNT][L502_SERIAL_SIZE];
@@ -29,8 +26,8 @@ public:
 	int ch_count, s_ch_bufsz;
 	vector<double> average;
 	vector<vector<double>> input;
-	int err_cnt;
-	int recv_cnt;
+	int err_cnt = 0;
+	int recv_cnt = 0;
 	double *current_data;
 	/// <summary>
 	/// 
@@ -61,21 +58,14 @@ public:
 };
 
 
-class LCard {
+class LCard: public Card {
 	/// <summary>
 	/// Частота опроса ADC
 	/// </summary>
 	double ADC_COLLECT_FREQ = 2000000;
 	double ADC_FRAME_FREQ = 0;
-	int err = 0;
-	int ADC_CHANNEL_COUNT = 16;
 	uint32_t* buf;
-	int ADC_BUF_SIZE;
-	int is_reading = 0;
-	/// <summary>
-	/// текущее напряжение на выводах DAC
-	/// </summary>
-	vector<double> cur_volt;
+
 public:
 
 	/// <summary>
@@ -83,7 +73,7 @@ public:
 	/// </summary>
 	/// <param name="card_No">номер платы по порядку запуска </param>
 	/// <param name="ADC_CH_COUNT"> количество используемых каналов ввода</param>
-	LCard(int card_No = 1, int ADC_CH_COUNT = 1, int ADC_BUF_SIZE = ADC_BUF_SIZE_1);
+	LCard(int card_No = 1, int ADC_CH_COUNT = 1, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
 	~LCard();
 
 	uint32_t count_ADC_data = 0;
@@ -91,18 +81,18 @@ public:
 	char* serial;
 	ADC_Collect data;
 	uint32_t next_lch;
-
+	
 	
 	void SetMode(uint32_t flags);
-	void SingleAnalogOut(double data, uint32_t channel = L502_DAC_CH1, uint32_t flags = 0x0001);
+	void SingleAnalogOut(double data, unsigned int channel = L502_DAC_CH1, double timeout = 0.1);
 	void SingleDigitalOut(uint32_t val, uint32_t mask);
-	double AsyncSingleAnalogRead(int channel, double freq = -1, uint32_t tout = 1, uint32_t flags = L502_PROC_FLAGS_VOLT);
+	double SingleAnalogRead(int channel, double freq = -1, uint32_t tout = 1, uint32_t flags = L502_PROC_FLAGS_VOLT); 
+	double SingleAnalogRead(int channel = 0, double timeout = 0);
 	double* AsyncAnalogRead(double freq = -1, uint32_t tout = 1, uint32_t flags = 0);
 	double SingleDigitalRead();
-	void BackstepZ();
-	ADC_Collect AnalogRead(int timeout_ms = 0, int bufsize = ADC_BUF_SIZE_1);
+	ADC_Collect AnalogRead(int timeout_ms = 50, int bufsize = ADC_BUF_SIZE_2);
 	void StopReadStream();
-
 	void StartReadStream();
+	void FullStop();
 };
 

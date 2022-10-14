@@ -43,14 +43,14 @@ public:
 	
 	double Position(char axis = 'Z', char unit = 'V');
 	
-	void Jump(Vecter step, LCard& ZCard, LCard& XYCard, const char unit = 'V');
+	void Jump(Vecter step, Card& ZCard, Card& XYCard, const char unit = 'V');
 	
-	void JumpTo(Vecter position, LCard& ZCard, LCard& XYCard, const char unit = 'V');
-	void ZJump(double step, LCard& ZCard, const char unit = 'V');
-	void ZJumpTo(double position, LCard& ZCard, const char unit = 'V');
-	void ZFJumpTo(double position, LCard& ZCard, double fine_range = 5, const char unit = 'V');
-	void Move(Vecter distance, double delay_micro, double djump, LCard& ZCard, LCard& XYCard, double (*check)(double) = NULL);
-	void MoveTo(Vecter destination, double delay_micro, double djump, LCard& ZCard, LCard& XYCard, double (*check)(double) = NULL);
+	void JumpTo(Vecter position, Card& ZCard, Card& XYCard, const char unit = 'V');
+	void ZJump(double step, Card& ZCard, const char unit = 'V');
+	void ZJumpTo(double position, Card& ZCard, const char unit = 'V');
+	void ZFJumpTo(double position, Card& ZCard, double fine_range = 5, const char unit = 'V');
+	void Move(Vecter distance, double delay_micro, double djump, Card& ZCard, Card& XYCard, double (*check)(double) = NULL);
+	void MoveTo(Vecter destination, double delay_micro, double djump, Card& ZCard, Card& XYCard, double (*check)(double) = NULL);
 	
 };
 
