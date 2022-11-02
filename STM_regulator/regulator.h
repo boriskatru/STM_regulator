@@ -54,6 +54,30 @@ inline string get_time_string() {
 	return time;
 }
 
+inline void make_logs(string folder, string text) {
+	string datestr = "";
+	string timestr = "";
+
+	time_t rawtime;
+	struct tm* timeinfo;
+	char buffern[20];								// строка, в которой будет хранитьс€ текуща€ дата
+	time(&rawtime);									// текуща€ дата в секундах
+#pragma warning(suppress : 4996)
+
+	timeinfo = localtime(&rawtime);					// текущее локальное врем€, представленное в структуре
+
+	strftime(buffern, 20, "%x", timeinfo);	
+	datestr += buffern;
+	
+	strftime(buffern, 20, "%H_%M", timeinfo);
+	timestr += buffern;
+	
+	std::filesystem::create_directories(folder + datestr);
+	ofstream file;
+	file.open("../../scans/" + datestr + "/" + "Logs.txt" , std::ofstream::out);
+	file << endl << timestr<< ":" << endl << text << endl;;
+	file.close();
+}
 inline double TrBiasStepper( double Vg, bool dir ) {
 	short int sign = 1;
 	if (dir == BACKWARD) sign = -1;
@@ -61,8 +85,8 @@ inline double TrBiasStepper( double Vg, bool dir ) {
 	double ranges[4][2] = {
 		{ 0.440, 0.050 },
 		{ 0.414, 0.012 },
-		{ 0.400, 0.003 },
-		{ 0.380, 0.001 }
+		{ 0.400, 0.00305 },
+		{ 0.380, 6 * MIN_STEP_SIZE }
 	};
 	for (int i = 0; i < 4; i++ ) {
 		if (Vg > ranges[i][0]) return (sign * ranges[i][1]);
@@ -293,7 +317,7 @@ public:
 	/// <param name="Vg_max">максимальный гейт транзистора, ¬</param>
 	/// <param name="incr">шаг калибровки гейта транзистора, ¬</param>
 	/// <param name="dir">путь сохранени€ файла</param>
-	void R_NV_TransistorCalibration(double Vg_min = 0.32, double Vg_max = 0.56, double incr = 0.003, string dir="../../scans/");
+	void Pn_CVg_TransistorCalibration(double Vg_min = 0.32, double Vg_max = 0.56, double incr = 0.003, string folder="../../scans/");
 
 	/// <summary>
 	///  алибровка сопротивлени€ калибровочного транзистора от напр€жени€ на гейте (по квази-трЄхточке).
@@ -306,6 +330,6 @@ public:
 	/// <param name="Vbias_crit"> максимальное напр€жение дл€ подачи на калибровочный вход </param>
 	/// <param name="delay_us"> задержка между измерением точек</param>
 	/// <param name="dir">путь сохранени€ файла</param>
-	void R_V_TransistorCalibration(double incr = 0.003, double Vg_min = 0.32, double Vg_max = 0.56, double Vsd_crit = 0.02, double  Vbias_crit = 0.05, int delay_us = 600000, string folder = "../../scans/");
+	void R_CVg_TransistorCalibration(double incr = 0.003, double Vg_min = 0.32, double Vg_max = 0.56, double Vsd_crit = 0.05, double  Vbias_crit = 0.2, int delay_us = 600000, string folder = "../../scans/");
 };
 

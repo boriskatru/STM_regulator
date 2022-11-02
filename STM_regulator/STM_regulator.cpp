@@ -65,9 +65,9 @@ int main()
 
     //                   КАЛИБРОВКИ                    //
     ///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
-    regul.R_NV_TransistorCalibration(0.36,0.6,0.002);          //  To calibrate Noise-V(gate) connect Z_coarse(NDAC2) to C1
+    //regul.Pn_CVg_TransistorCalibration(0.36,0.6,0.002);          //  To calibrate Noise-V(gate) connect Z_coarse(NDAC2) to C1
    
-    //regul.R_V_TransistorCalibration(0.002, 0.382, 0.55, 0.2);    // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC1) to C2; Noise (F1) -C3
+    regul.R_CVg_TransistorCalibration(0.002, 0.382, 0.55);    // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC1) to C2; Noise (F1) -C3
     //regul.Retract(20,0.5,1);
 
     getchar(); getchar();

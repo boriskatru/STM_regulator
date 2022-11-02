@@ -463,8 +463,8 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 }
 void Regulator::VAC_scan() {}
 
-void Regulator::R_NV_TransistorCalibration(double Vg_min , double Vg_max , double incr, string dir) {
-	std::cout << endl << "R_NV_TransistorCalibration started..." << endl;
+void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , double incr, string folder) {
+	std::cout << endl << "Pn_CVg_TransistorCalibration started..." << endl;
 	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
 	int point_num = (Vg_max - Vg_min) / incr;
 	double dispersion = 0;
@@ -473,14 +473,14 @@ void Regulator::R_NV_TransistorCalibration(double Vg_min , double Vg_max , doubl
 	vector<double> noise(point_num, point_num);
 	vector<double> volts(point_num, point_num);
 	string timestr = get_time_string();
-
-	std::filesystem::create_directories(dir + timestr);
+	std::filesystem::create_directories(folder + timestr);
 	ofstream file, file_Back;
+	make_logs(folder, "Pn_CVg_TransistorCalibration started");
 	std::cout << endl << "Output directories created..." << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	uwait(600000);
-	file.open(dir + timestr + "/" + "Noise_D.dat", std::ofstream::out);
-	file_Back.open(dir + timestr + "/" + "Noise_B.dat", std::ofstream::out);
+	file.open(folder + timestr + "/" + "Noise_D.dat", std::ofstream::out);
+	file_Back.open(folder + timestr + "/" + "Noise_B.dat", std::ofstream::out);
 	XYCard.StopReadStream();
 	XYCard.StartReadStream();
 	for (int i = 0; i < point_num; i++) {
@@ -517,20 +517,21 @@ void Regulator::R_NV_TransistorCalibration(double Vg_min , double Vg_max , doubl
 		std::cout << "data printed in file Noise_B.dat " << endl;
 
 	}
+	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	std::cout << endl << "Calibration completed!" << endl;
 }
-void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_max, double Vsd_crit, double Vbias_crit, int delay_us, string folder) {
+void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double Vg_max, double Vsd_crit, double Vbias_crit, int delay_us, string folder) {
 	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
-	std::cout << endl << "R_V_TransistorCalibration started..." << endl;
+	std::cout << endl << "R_CVg_TransistorCalibration started..." << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
 	string timestr = get_time_string();
 	double Vg = Vg_min, Vbias =  0, Vg_m = 0, Vsd = 0;
-	
 	double noise;
 	std::filesystem::create_directories(folder + timestr);
 	ofstream file;
 	std::cout << endl << "Output directories created..." << endl;
+	make_logs(folder, "R_CVg_TransistorCalibration started");
 	XYCard.StopReadStream();
 	XYCard.StartReadStream();
 	int count = 0;
@@ -544,7 +545,7 @@ void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_
 
 		dir = -1;
 		uwait(delay_us);
-		while ((dir < 1) || (Vbias < 0)) {	
+		while ((dir < 1) || (Vbias <= 0)) {	
 			
 			ZCard.SingleAnalogOut(Vbias , Z_OUT_FINE);
 			XYCard.StopReadStream();
@@ -552,7 +553,7 @@ void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_
 			XYCard.StartReadStream();
 
 			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
-			Vsd = data.Average(ADC_BUF_SIZE_2 / 4, 1);
+			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 1);
 			noise = data.Average(ADC_BUF_SIZE_2 / 2, 2);
 
 			file << Vsd << "   " << Vbias << "   " << noise << "   " << Vg << endl;
@@ -568,6 +569,8 @@ void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_
 		std::cout << count << "  of  " << (Vg_max - Vg_min) / incr << " VACs done" << endl;
 		file.close();
 	}
+	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
+	ZCard.SingleAnalogOut(0, Z_OUT_FINE);
 	std::cout << endl << "Calibration completed!" << endl;
 }
 
@@ -577,37 +580,3 @@ void Regulator::R_V_TransistorCalibration(double incr, double Vg_min, double Vg_
 
 
 
-
-
-
-/*while ((Vbias >= -Vbias_crit) && (Vsd > -Vsd_crit)) {
-
-
-		ZCard.SingleAnalogOut(Vbias , Z_OUT_FINE);
-		XYCard.StopReadStream();
-		uwait(delay_us);
-		XYCard.StartReadStream();
-
-		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
-		Vsd = data.Average(ADC_BUF_SIZE_2 / 4, 1);
-		noise = data.Average(ADC_BUF_SIZE_2 / 2, 2);
-
-		file << Vsd << "   " << Vbias << "   " << noise << "   " << Vg << endl;
-		Vbias += TrBiasStepper(Vg, BACKWARD);
-
-	}
-	while ((Vbias <= 0)) {
-
-
-		ZCard.SingleAnalogOut(Vbias, Z_OUT_FINE);
-		XYCard.StopReadStream();
-		uwait(delay_us);
-		XYCard.StartReadStream();
-
-		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
-		Vsd = data.Average(ADC_BUF_SIZE_2 / 4, 1);
-		noise = data.Average(ADC_BUF_SIZE_2 / 2, 2);
-
-		file << Vsd << "   " << Vbias << "   " << noise << "   " << Vg << endl;
-		Vbias += TrBiasStepper(Vg, FORWARD);
-	}*/
