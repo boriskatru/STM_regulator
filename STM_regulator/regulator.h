@@ -53,6 +53,25 @@ inline string get_time_string() {
 	time += buffern;
 	return time;
 }
+
+inline double TrBiasStepper( double Vg, bool dir ) {
+	short int sign = 1;
+	if (dir == BACKWARD) sign = -1;
+
+	double ranges[4][2] = {
+		{ 0.440, 0.050 },
+		{ 0.414, 0.012 },
+		{ 0.400, 0.003 },
+		{ 0.380, 0.001 }
+	};
+	for (int i = 0; i < 4; i++ ) {
+		if (Vg > ranges[i][0]) return (sign * ranges[i][1]);
+	}
+	return 2 * MIN_STEP_SIZE;
+	
+	
+}	
+
 class PID {
 	
 public:
@@ -267,7 +286,8 @@ public:
 	void ClearTip(int cnt = 25);
 
 	/// <summary>
-	/// Калибровка шумогого сигнала с детектора в зависимости от напряжения на гейте калибровочного транзистора
+	/// Калибровка шумогого сигнала с детектора в зависимости от напряжения на гейте калибровочного транзистора.
+	/// To calibrate Noise-V(gate) connect Z_coarse(NDAC2) to C1
 	/// </summary>
 	/// <param name="Vg_min">>минимальный гейт транзистора, В</param>
 	/// <param name="Vg_max">максимальный гейт транзистора, В</param>
@@ -276,14 +296,16 @@ public:
 	void R_NV_TransistorCalibration(double Vg_min = 0.32, double Vg_max = 0.56, double incr = 0.003, string dir="../../scans/");
 
 	/// <summary>
-	/// Калибровка сопротивления калибровочного транзистора от напряжения на гейте (по квази-трёхточке)
+	/// Калибровка сопротивления калибровочного транзистора от напряжения на гейте (по квази-трёхточке).
+	/// To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC1) to C2; Noise (F1) -C3
 	/// </summary>
-	/// <param name="incr">шаг калибровки гейта транзистора, В</param>
-	/// <param name="Vg_min">минимальный гейт транзистора, В</param>
-	/// <param name="Vg_max">максимальный гейт транзистора, В</param>
-	/// <param name="Vsd_crit">критическое падение напряжения на тразисторе</param>
-	/// <param name="delay_us">задержка между измерением точек</param>
+	/// <param name="incr"> шаг калибровки гейта транзистора, В</param>
+	/// <param name="Vg_min"> минимальный гейт транзистора, В</param>
+	/// <param name="Vg_max"> максимальный гейт транзистора, В</param>
+	/// <param name="Vsd_crit"> критическое падение напряжения на тразисторе</param>
+	/// <param name="Vbias_crit"> максимальное напряжение для подачи на калибровочный вход </param>
+	/// <param name="delay_us"> задержка между измерением точек</param>
 	/// <param name="dir">путь сохранения файла</param>
-	void R_V_TransistorCalibration(double incr = 0.003, double Vg_min = 0.32, double Vg_max = 0.56, double Vsd_crit = 0.02, int delay_us = 600000, string dir = "../../scans/");
+	void R_V_TransistorCalibration(double incr = 0.003, double Vg_min = 0.32, double Vg_max = 0.56, double Vsd_crit = 0.02, double  Vbias_crit = 0.05, int delay_us = 600000, string folder = "../../scans/");
 };
 

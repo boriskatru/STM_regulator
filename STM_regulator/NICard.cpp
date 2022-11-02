@@ -79,6 +79,7 @@ NICard::NICard() : Card(1, 1, "NICard", 1) {
 
 	DAQmxCreateAOVoltageChan(ao_1, "Dev1/ao1", "", -5.0, 5.0, DAQmx_Val_Volts, NULL);					// настраиваем задачу вывода  NDAC2
 	DAQmxCfgSampClkTiming(ao_1, "", 900000.0, DAQmx_Val_Rising, DAQmx_Val_ContSamps, PTW_);
+	is_writing[0] = 0;
 }
 
 NICard::~NICard()
@@ -94,20 +95,26 @@ void NICard::SingleAnalogOut(double signal, unsigned int channel , double timeou
 
 	if (channel) {
 		if (!is_writing[1]) {
+			DAQmxStopTask(ao_0);
+			is_writing[0] = 0;
 			DAQmxStartTask(ao_1);
 			is_writing[1] = 1;
 		}
 		DAQmxWriteAnalogScalarF64(ao_1, autostart, timeout, signal, NULL);
 		cur_volt[1] = signal;
+		
 	}
 	else {
+		
 		if (!is_writing[0]) {
+			DAQmxStopTask(ao_1);
+			is_writing[1] = 0;
 			DAQmxStartTask(ao_0);
 			is_writing[0] = 1;
 		}
-		DAQmxWriteAnalogScalarF64(ao_0, autostart, timeout, signal, NULL);
+		 DAQmxWriteAnalogScalarF64(ao_0, autostart, timeout, signal, NULL);
 		cur_volt[0] = signal;
-
+		
 	}
 }
 double NICard::SingleAnalogRead(int channel, double timeout) {

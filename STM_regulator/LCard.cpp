@@ -22,7 +22,7 @@ void ADC_Collect::parse_channels() {
 			input[i][k] = current_data[ch_count * k + i];
 		}
 	}
-	 cout << recv_cnt<< endl;
+	if (recv_cnt< s_ch_bufsz* ch_count) cout << recv_cnt<< endl;
 	if (is_same)
 		err_cnt++;
 	else err_cnt = 0;
@@ -34,11 +34,12 @@ void ADC_Collect::parse_channels() {
 }
 double ADC_Collect::Average(int count , int ch ) {
 	average[ch] = 0;
-	for (int i = s_ch_bufsz - 1; i > max(s_ch_bufsz - 1 - count, 0); i--) {
+	for (int i = s_ch_bufsz - 1; i > max(max(s_ch_bufsz - 1 - count, 0), s_ch_bufsz - 1 - recv_cnt); i--) {
 		average[ch] += input[ch][i];
+		if (recv_cnt < s_ch_bufsz * ch_count) cout << input[ch][i] << endl;
 	}
 
-	average[ch] = average[ch] / min(count, s_ch_bufsz);
+	average[ch] = average[ch] / min( min(count, s_ch_bufsz), recv_cnt);
 	return average[ch];
 }
 void ADC_Collect::show() {
@@ -217,11 +218,18 @@ double LCard::SingleDigitalRead() {
 /// </summary>
 ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 	StartReadStream();
-	
+	if (timeout_ms) {
+		uwait(timeout_ms * 1000);
+	}
+	else uwait(bufsize/2);
 	int recv_zero_cnt = 0;
-	error = L502_Recv(hnd, buf, bufsize, timeout_ms);
-	while (error == 0) {
-		error = L502_Recv(hnd, buf, bufsize, timeout_ms);
+RECIEVE:
+	error = L502_Recv(hnd, buf, bufsize, bufsize );
+	count_ADC_data = error;
+	//cout << endl << count_ADC_data << endl;
+	while (count_ADC_data == 0) {
+		cout << "no data" << endl << endl;
+		error = L502_Recv(hnd, buf, bufsize, bufsize);
 		recv_zero_cnt++;
 		if (recv_zero_cnt > RECIVE_COUNT_TIMEOUT) {
 			if (serial == serial_1)
@@ -234,7 +242,7 @@ ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 		}
 	}
 
-	count_ADC_data = error;
+	
 
 	if (error < 0) cerr << "Îøèáêà  " << error << " â L502_Recv()" << endl;
 	error = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
@@ -245,6 +253,7 @@ ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 		error = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
 	}
 	else if ((error != 0) && (error != -11)) cerr << "Îøèáêà  " << error << " â L502_ProcessAdcData()" << endl;
+	if (count_ADC_data == 0) goto RECIEVE;
 	data.recv_cnt = count_ADC_data;
 	data.parse_channels();	
 	return data;

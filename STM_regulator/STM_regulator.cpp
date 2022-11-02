@@ -33,19 +33,41 @@ int main()
         cout << "ch " << i << " value: " << data.Average(8, i) << endl;
     }
     double data1 = regul.ZCard.SingleAnalogRead();
-    for (int i = 0; i < 1; i++) {
-        cout << "N0 " << i << " value: " << regul.ZCard.SingleAnalogRead()<< endl;
-    }
-
+    Timer tmr;
+    //regul.ZCard.SingleAnalogOut(0.05, 0U);
+    //uwait(1000000000);
+    //while (true) {
+    //   
+    //    regul.ZCard.SingleAnalogOut(5*sin(tmr.get_full_interval()/20000),0U);
+    //    regul.ZCard.SingleAnalogOut(5 * cos(tmr.get_full_interval() / 20000), 1U);
+    //    //regul.ZCard.SingleAnalogOut(5 * sin(tmr.get_full_interval() / 1000), 0U);
+    //}
+    //for (int i = 0; i < 5; i++) {
+    //    
+    //    regul.XYCard.StopReadStream();
+    //    regul.XYCard.StartReadStream();
+    //    //regul.ZCard.SingleAnalogOut((i / 2) % 5 , 0U);
+    //    regul.ZCard.SingleAnalogOut((double)i / 5, 1U);
+    //    //cout << "Ndac0  value: " << regul.ZCard.cur_volt[0] << endl;
+    //    cout << "Ndac0  value: " << regul.ZCard.cur_volt[1] << endl;
+    //    cout << endl;
+    //    cout << "ch " << 3 << " value: " << regul.XYCard.AnalogRead(100).Average(ADC_BUF_SIZE_2, 3) << endl;
+    //}
+    cout << endl << "Programm started..." << endl;
     /////////////////КОНЕЦ ТЕСТА//////////////////////////
-    for (int i = 0; i < 500; i++) {
-        regul.ZStep(FORWARD,3);
-        cout << i << endl;
-        uwait(20000);
-    }
+    //for (int i = 0; i < 500; i++) {
+    //    regul.ZStep(FORWARD,3);
+    //    cout << i << endl;
+    //    uwait(20000);
+    //}
     //getchar(); getchar();
-    //regul.R_NV_TransistorCalibration(0.39,0.6);
-   // regul.R_V_TransistorCalibration(0.003, 0.36, 0.6);
+
+
+    //                   КАЛИБРОВКИ                    //
+    ///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
+    regul.R_NV_TransistorCalibration(0.36,0.6,0.002);          //  To calibrate Noise-V(gate) connect Z_coarse(NDAC2) to C1
+   
+    //regul.R_V_TransistorCalibration(0.002, 0.382, 0.55, 0.2);    // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC1) to C2; Noise (F1) -C3
     //regul.Retract(20,0.5,1);
 
     getchar(); getchar();

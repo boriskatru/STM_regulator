@@ -34,7 +34,7 @@ public:
 	/// </summary>
 	/// <param name="ch_count"> Количество каналов считывания с платы </param>
 	/// <param name="ADC_BUF_SIZE"> Размер буфера чтения </param>
-	ADC_Collect(int ch_count = 1, int ADC_BUF_SIZE = ADC_BUF_SIZE_1);
+	ADC_Collect(int ch_count = 4, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
 	/// <summary>
 	/// Обработка данных с карты
 	/// </summary>
@@ -73,7 +73,7 @@ public:
 	/// </summary>
 	/// <param name="card_No">номер платы по порядку запуска </param>
 	/// <param name="ADC_CH_COUNT"> количество используемых каналов ввода</param>
-	LCard(int card_No = 1, int ADC_CH_COUNT = 1, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
+	LCard(int card_No = 1, int ADC_CH_COUNT = 4, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
 	~LCard();
 
 	uint32_t count_ADC_data = 0;

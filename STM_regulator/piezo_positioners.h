@@ -9,8 +9,8 @@
 #include "LCard.h"
 
 #define Z_COARSE_PREC 0.05
-#define Z_OUT L502_DAC_CH1
-#define Z_OUT_FINE L502_DAC_CH2 
+#define Z_OUT 1U
+#define Z_OUT_FINE 0U
 #define BIAS_OUT L502_DAC_CH2
 #define X_OUT L502_DAC_CH1
 #define Y_OUT L502_DAC_CH2
