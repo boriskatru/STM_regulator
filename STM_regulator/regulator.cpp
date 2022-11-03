@@ -476,7 +476,8 @@ void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , dou
 	std::filesystem::create_directories(folder + timestr);
 	ofstream file, file_Back;
 	make_logs(folder, "Pn_CVg_TransistorCalibration started");
-	std::cout << endl << "Output directories created..." << endl;
+	std::cout << endl << "Output directories created..." << endl; 
+	std::cout << endl << point_num <<" data points expected:" << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	uwait(600000);
 	file.open(folder + timestr + "/" + "Noise_D.dat", std::ofstream::out);
@@ -494,12 +495,11 @@ void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , dou
 		noise[i] = data.Average(ADC_BUF_SIZE_2 / 2, 2);
 		volts[i] = Vg_min + i * incr;
 
-		std::cout << endl << endl << i << endl;
-		std::cout << " printing data..." << endl;
-		file << noise[i] << "   " << volts[i] /*Vg_min + i * incr*/  <<endl;
-		std::cout << "data printed in file Noise_D.dat " << endl;
-
+		std::cout << endl << endl <<  i + 1 << "  of  " << point_num << "FW points done " << endl;
+		file << noise[i] << "   " << volts[i] <<endl;
+		
 	}
+	std::cout << "data printed in file Noise_D.dat " << endl;
 	for (int i = point_num-1; i >=0; i--) {
 
 		ZCard.SingleAnalogOut(Vg_min + i * incr, Z_OUT);
@@ -511,18 +511,17 @@ void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , dou
 		noise[i] = data.Average(ADC_BUF_SIZE_2 / 2, 2);
 		volts[i] = Vg_min + i * incr;
 
-		std::cout << endl << endl << i << endl;
-		std::cout << " printing data..." << endl;
-		file_Back << noise[i] << "   " << volts[i] /*Vg_min + i * incr*/ << endl;
-		std::cout << "data printed in file Noise_B.dat " << endl;
-
+		std::cout << endl << endl << point_num - i << "  of  " << point_num << "BW points done " << endl;
+		file_Back << noise[i] << "   " << volts[i]  << endl;
+	
 	}
+	std::cout << "data printed in file Noise_B.dat " << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	std::cout << endl << "Calibration completed!" << endl;
 }
 void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double Vg_max, double Vsd_crit, double Vbias_crit, int delay_us, string folder) {
 	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
-	std::cout << endl << "R_CVg_TransistorCalibration started..." << endl;
+	std::cout << endl << " R_CVg_TransistorCalibration started..." << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
 	string timestr = get_time_string();
@@ -530,7 +529,7 @@ void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double V
 	double noise;
 	std::filesystem::create_directories(folder + timestr);
 	ofstream file;
-	std::cout << endl << "Output directories created..." << endl;
+	std::cout << endl << " Output directories created..." << endl;
 	make_logs(folder, "R_CVg_TransistorCalibration started");
 	XYCard.StopReadStream();
 	XYCard.StartReadStream();
@@ -565,7 +564,7 @@ void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double V
 	
 
 		std::cout << " printing data..." << endl;
-		std::cout << "data printed in file VAC_Vg_" << Vg << ".dat " << endl;
+		std::cout << " data printed in file VAC_Vg_" << Vg << ".dat " << endl;
 		std::cout << count << "  of  " << (Vg_max - Vg_min) / incr << " VACs done" << endl;
 		file.close();
 	}

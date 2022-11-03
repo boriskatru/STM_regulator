@@ -83,8 +83,8 @@ inline double TrBiasStepper( double Vg, bool dir ) {
 	if (dir == BACKWARD) sign = -1;
 
 	double ranges[4][2] = {
-		{ 0.440, 0.050 },
-		{ 0.414, 0.012 },
+		{ 0.440, 0.025 },
+		{ 0.414, 0.01 },
 		{ 0.400, 0.00305 },
 		{ 0.380, 6 * MIN_STEP_SIZE }
 	};
