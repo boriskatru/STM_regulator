@@ -91,7 +91,7 @@ void Regulator::ZStep(int dir, double step_size) {
 		for (double i = 0; i < step_size; i += MIN_STEP_SIZE) {
 			ZCard.SingleAnalogOut(i);
 		}
-		ZCard.SingleAnalogOut(0);
+		ZCard.SingleAnalogOut(0,0);
 	}
 	else {
 		for (double i = step_size; i > 0; i -= MIN_STEP_SIZE) {
@@ -108,12 +108,13 @@ void Regulator::StepXY(int x_steps, int y_steps, double step_size) {
 
 
 
-void Regulator::Retract(int steps, double step_incr, double rpt) {
+void Regulator::Retract(int steps, double step_incr, double rpt, string folder) {
 	int step = -3;
 	MHome();
-	double st_sz = max(rise() / 1.25 - 0.2, 0.4);
+	double height = rise();
 	MHome();
-	wait_clear_buf(ZCard);
+	double st_sz = max(height / 1.25 - 0.2, 0.4);
+	
 	for (double sz = st_sz; sz <= 5; sz += step_incr) {
 		for (int i = 0; i < rpt; i++) {
 			ZCard.SingleAnalogOut(5);
@@ -128,6 +129,7 @@ void Regulator::Retract(int steps, double step_incr, double rpt) {
 		ZStep(-1);
 		step++;
 	}
+	make_logs(folder, "Rectracted steps: "+ to_string(steps));
 }
 double Regulator::rise(double bias_, double bwa, double target_V, double djump) {
 	bias = bias_;
@@ -135,7 +137,7 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 	//uwait(1000000);
 	/*Обнуляем всё*/
 	bool is_touch = false;
-	int last_height;
+	int last_height = 0;
 	//MHome();
 	/*Касание и выдержка*/
 	uwait(500000);
@@ -163,13 +165,16 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump) 
 		}
 	}
 
-	ZCard.StopReadStream();
+	
 	piezo.Move(Vecter(0, 0, -bwa), 0, 5 * MIN_STEP_SIZE, ZCard, XYCard);
 	MHome();
+	ZCard.StopReadStream();
 	//uwait(1000000);
+	cout << "Height: " << last_height << endl;
 	return last_height;
 }
-double Regulator::Landing(double bias_, double range, double target_V, double delay_micro, double djump) {
+double Regulator::Landing(double bias_, double range, double target_V, double delay_micro, double djump, string folder) {
+	make_logs(folder, "Landing started");
 	bias = bias_;
 	target_V += current_offset;
 	//ZCard.SingleAnalogOut(bias, BIAS_OUT);
@@ -177,7 +182,7 @@ double Regulator::Landing(double bias_, double range, double target_V, double de
 	int stp_count = 0;
 	double last_height = 99;
 	Vecter zero(0, 0, 0);
-	for (int i = 0; i < 30; i++) {//считывает n раз для очистки буфера
+	for (int i = 0; i < 10; i++) {//считывает n раз для очистки буфера
 		ZCard.SingleAnalogRead();
 		is_touch = (ZCard.SingleAnalogRead() > target_V);
 		//std::cout << ZCard.data.Average(8, 0) << endl;
@@ -195,8 +200,9 @@ double Regulator::Landing(double bias_, double range, double target_V, double de
 		if (last_height < 0.2) is_touch = false;
 		if (piezo.Position('Z') >= range) {
 			//uwait(delay_micro);
+			stp_count++;
 			piezo.ZJumpTo(0, ZCard);
-			for (int i = 0; i < 50; i++) {
+			for (int i = 0; i < 20; i++) {
 				uwait(500);
 				ZCard.SingleAnalogRead();
 			}
@@ -205,16 +211,18 @@ double Regulator::Landing(double bias_, double range, double target_V, double de
 		}
 	}
 
-	ZCard.StopReadStream();
-	piezo.Move(Vecter(0, 0, -0.1), delay_micro, djump, ZCard, XYCard);
+	
+	piezo.Move(Vecter(0, 0, -0.2), delay_micro, 8*djump, ZCard, XYCard);
 	MHome();
+	ZCard.StopReadStream();
 	piezo.JumpTo(Vecter(0, 0, 0), ZCard, XYCard);
 	std::cout << "Touch current signal: " << ZCard.data_[0] << endl;
 	std::cout << "Touch_height: " << last_height << endl;
 	std::cout << "Landing done" << endl;
-
+	std::cout << "Steps:" << stp_count << endl;
 	getchar(); getchar();
 	ZCard.StopReadStream();
+	make_logs(folder, "Landing completed\nSteps done:"+ to_string(stp_count));
 	return last_height;
 }
 void Regulator::Calibration(int points_num, ofstream file, string filename) {
@@ -349,58 +357,60 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 	/*Касание и выдержка*/
 	uwait(1000000);
 	ZCard.StopReadStream();
-	for (int i = 0; i < 1000; i++)  ZCard.SingleAnalogRead();
+	//for (int i = 0; i < 1000; i++)  ZCard.SingleAnalogRead();
 	std::cout << "input	" << ZCard.SingleAnalogRead() << endl;
+	rise(bias, bwa, crit_V);
 	while (!is_touch) {
 		piezo.ZJump(djump / 2, ZCard);
-		is_touch = (ZCard.SingleAnalogRead() < crit_V);
+		is_touch = (ZCard.SingleAnalogRead() > crit_V);
 
 		if (piezo.Position() < 2 * bwa) is_touch = 0;
 		for (int i = 0; i < 10; i++)  ZCard.SingleAnalogRead();
 		ZCard.SingleAnalogRead();
 	}
+	
 	while (is_touch) {
 
 		piezo.ZJump(-2 * djump, ZCard);
-		is_touch = (ZCard.SingleAnalogRead() < crit_V);
+		is_touch = (ZCard.SingleAnalogRead() > crit_V);
 
 		if (piezo.Position() < 2 * bwa) is_touch = 0;
 		ZCard.SingleAnalogRead();
 	}
 	piezo.Move(Vecter(0, 0, -up_mult * bwa), 0, djump, ZCard, XYCard);
-	uwait(60000000); // ждём 60 сек
+	uwait(180000000); // ждём 60 сек
 
 	ZCard.SingleAnalogRead();
-	is_touch = (ZCard.SingleAnalogRead() < crit_V);
+	is_touch = (ZCard.SingleAnalogRead() > crit_V);
 	while (is_touch) {
 
-		piezo.ZJump(-2 * djump, ZCard);
-		is_touch = (ZCard.SingleAnalogRead() < crit_V);
+		piezo.ZJump(-4 * djump, ZCard);
+		is_touch = (ZCard.SingleAnalogRead() > crit_V);
 
 		if (piezo.Position() < bwa) is_touch = 0;
 		ZCard.SingleAnalogRead();
 	}
 	//piezo.Move(Vecter(0, 0, -bwa), 0, djump, ZCard, XYCard);
-	is_touch = (ZCard.SingleAnalogRead() < crit_V);
-
+	is_touch = (ZCard.SingleAnalogRead() > crit_V);
+	cout << "signal : " << ZCard.SingleAnalogRead() << "		Crit_v = " << crit_V << endl;
+	cout << "is touch : " << is_touch << endl;
 	/*Начало сканирования*/
 	for (int y = 0; y < scan.y_n; y++) {
 		/*передний ход:*/
+
 		for (int x = 0; x < scan.x_n; x++) {
 
-			for (int i = 0; i < 50; i++) {
-				//uwait(50);
-				is_touch = (ZCard.SingleAnalogRead() < crit_V);
-
-			}
+			uwait(50);
+			is_touch = (ZCard.SingleAnalogRead() > crit_V);
 			if (piezo.Position() < bwa) is_touch = 0;
 			while (!is_touch) {
 				piezo.ZJump(djump, ZCard);
-				is_touch = (ZCard.SingleAnalogRead() < crit_V);
+				is_touch = (ZCard.SingleAnalogRead() > crit_V);
 
 				if (piezo.Position() < bwa) is_touch = 0;
 
 			}
+
 			scan.HFWplot[y][x] = piezo.Position();
 			scan.CFWplot[y][x] = ZCard.data_[0] * 1000;
 
@@ -408,26 +418,27 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 
 			while (is_touch) {
 
-				piezo.ZJump(-2 * djump, ZCard);
-				is_touch = (ZCard.SingleAnalogRead() < crit_V);
-
+				piezo.ZJump(-4 * djump, ZCard);
+				is_touch = (ZCard.SingleAnalogRead() > crit_V);
+			
 				if (piezo.Position() < bwa) is_touch = 0;
 				ZCard.SingleAnalogRead();
 			}
-			piezo.Move(Vecter(x_step, 0, -bwa), 0, 2 * djump, ZCard, XYCard);
+			piezo.Move(Vecter(0, 0, -bwa), 0, 4 * djump, ZCard, XYCard);
+			piezo.Move(Vecter(x_step, 0,  0), 0, 2 * djump, ZCard, XYCard);
 		}
 		/*задний ход:*/
 		for (int x = scan.x_n - 1; x >= 0; x--) {
-			for (int i = 0; i < 50; i++) {
-				//uwait(50);
-				is_touch = (ZCard.SingleAnalogRead() < crit_V);
+			
+			uwait(50);
+			is_touch = (ZCard.SingleAnalogRead() > crit_V);
 
-			}
+			
 			if (piezo.Position() < bwa) is_touch = 0;
 			while (!is_touch) {
 
 				piezo.ZJump(djump, ZCard);
-				is_touch = (ZCard.SingleAnalogRead() < crit_V);
+				is_touch = (ZCard.SingleAnalogRead() > crit_V);
 
 				if (piezo.Position() < bwa) is_touch = 0;
 
@@ -440,16 +451,17 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 
 			while (is_touch) {
 
-				piezo.ZJump(-2 * djump, ZCard);
-				is_touch = (ZCard.SingleAnalogRead() < crit_V);
+				piezo.ZJump(-4 * djump, ZCard);
+				is_touch = (ZCard.SingleAnalogRead() > crit_V);
 
 				if (piezo.Position() < bwa) is_touch = 0;
 				ZCard.SingleAnalogRead();
 			}
-			piezo.Move(Vecter(-x_step, 0, -bwa), 0, 2 * djump, ZCard, XYCard);
+			piezo.Move(Vecter(0, 0, -bwa), 0, 4 * djump, ZCard, XYCard);
+			piezo.Move(Vecter(-x_step, 0, 0), 0, 2 * djump, ZCard, XYCard);
 		}
 
-		piezo.Move(Vecter(0, y_step, -bwa), 0, 2 * djump, ZCard, XYCard);
+		piezo.Move(Vecter(0, y_step, 0), 0,  djump, ZCard, XYCard);
 		std::cout << "current y:	" << y << "	of	" << scan.y_n << endl;
 		scan.SaveRow(y);
 	}
@@ -463,9 +475,9 @@ void Regulator::TouchScan(double bias_ , double bwa, double crit_V, double x_dim
 }
 void Regulator::VAC_scan() {}
 
-void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , double incr, string folder) {
+void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , double incr, int delay, string folder) {
 	std::cout << endl << "Pn_CVg_TransistorCalibration started..." << endl;
-	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
+	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2000, ADC_BUF_SIZE_2);
 	int point_num = (Vg_max - Vg_min) / incr;
 	double dispersion = 0;
 	double max_delta = 0;
@@ -476,10 +488,12 @@ void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , dou
 	std::filesystem::create_directories(folder + timestr);
 	ofstream file, file_Back;
 	make_logs(folder, "Pn_CVg_TransistorCalibration started");
-	std::cout << endl << "Output directories created..." << endl; 
-	std::cout << endl << point_num <<" data points expected:" << endl;
+	std::cout << endl << "Output directories created: " << folder + timestr << endl;
+	std::cout << endl << point_num << " data points expected:"  << endl;
+	std::cout << endl << " Expexted time:" << (delay + ADC_BUF_SIZE_2 / 2) * point_num * 2 / 1000000 / 60 << "m" << endl;
+	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
-	uwait(600000);
+	uwait(1000000);
 	file.open(folder + timestr + "/" + "Noise_D.dat", std::ofstream::out);
 	file_Back.open(folder + timestr + "/" + "Noise_B.dat", std::ofstream::out);
 	XYCard.StopReadStream();
@@ -488,14 +502,15 @@ void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , dou
 
 		ZCard.SingleAnalogOut(Vg_min + i * incr, Z_OUT);
 		XYCard.StopReadStream();
-		uwait(600000);
 		XYCard.StartReadStream();
+		uwait(delay);
 		
-		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
+		
+		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2000, ADC_BUF_SIZE_2);
 		noise[i] = data.Average(ADC_BUF_SIZE_2 / 2, 2);
 		volts[i] = Vg_min + i * incr;
 
-		std::cout << endl << endl <<  i + 1 << "  of  " << point_num << "FW points done " << endl;
+		std::cout << endl << endl <<  i + 1 << "  of  " << point_num << "  FW points done " << endl;
 		file << noise[i] << "   " << volts[i] <<endl;
 		
 	}
@@ -504,20 +519,21 @@ void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , dou
 
 		ZCard.SingleAnalogOut(Vg_min + i * incr, Z_OUT);
 		XYCard.StopReadStream();
-		uwait(600000);
+		uwait(delay);
 		XYCard.StartReadStream();
 
-		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
+		data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2000, ADC_BUF_SIZE_2);
 		noise[i] = data.Average(ADC_BUF_SIZE_2 / 2, 2);
 		volts[i] = Vg_min + i * incr;
 
-		std::cout << endl << endl << point_num - i << "  of  " << point_num << "BW points done " << endl;
+		std::cout << endl << endl << point_num - i << "  of  " << point_num << "  BW points done " << endl;
 		file_Back << noise[i] << "   " << volts[i]  << endl;
 	
 	}
 	std::cout << "data printed in file Noise_B.dat " << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	std::cout << endl << "Calibration completed!" << endl;
+	make_logs(folder, "Pn_CVg_TransistorCalibration completed");
 }
 void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double Vg_max, double Vsd_crit, double Vbias_crit, int delay_us, string folder) {
 	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
@@ -525,8 +541,9 @@ void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double V
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
 	string timestr = get_time_string();
-	double Vg = Vg_min, Vbias =  0, Vg_m = 0, Vsd = 0;
+	double Vg = Vg_min, Vbias =  0, Vsd = 0;
 	double noise;
+	double offset = 0.042;
 	std::filesystem::create_directories(folder + timestr);
 	ofstream file;
 	std::cout << endl << " Output directories created..." << endl;
@@ -544,20 +561,28 @@ void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double V
 
 		dir = -1;
 		uwait(delay_us);
-		while ((dir < 1) || (Vbias <= 0)) {	
+		while ((dir < 1) || (Vbias <= MIN_STEP_SIZE)) {	
 			
 			ZCard.SingleAnalogOut(Vbias , Z_OUT_FINE);
 			XYCard.StopReadStream();
 			uwait(delay_us);
 			XYCard.StartReadStream();
 
-			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
-			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 1);
+			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2000, ADC_BUF_SIZE_2);
+			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, 3);
 			noise = data.Average(ADC_BUF_SIZE_2 / 2, 2);
 
 			file << Vsd << "   " << Vbias << "   " << noise << "   " << Vg << endl;
 			
-			if ((Vsd >= Vsd_crit) || (Vbias >= Vbias_crit) || (Vbias <= -Vbias_crit) || (Vsd <= -Vsd_crit)) dir++;
+			if (((Vsd >= Vsd_crit- offset) && (dir == -1)) ||
+				((Vsd <= -Vsd_crit- offset) && (dir == 0)) ||
+				((Vbias >= Vbias_crit) && (Vsd >= 0.00008- offset)) ||
+				((Vbias <= -Vbias_crit) && (Vsd <= -0.00008- offset))) {
+				
+				dir++;
+				cout << dir << endl;
+			}
+			
 			Vbias += TrBiasStepper(Vg, dir ? FORWARD : BACKWARD);
 			
 		}
@@ -571,6 +596,7 @@ void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double V
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0, Z_OUT_FINE);
 	std::cout << endl << "Calibration completed!" << endl;
+	make_logs(folder, "R_CVg_TransistorCalibration completed");
 }
 
 

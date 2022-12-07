@@ -40,7 +40,8 @@ public:
 
 	void SetMode(uint32_t flags) ;
 
-	void SingleAnalogOut(double signal, unsigned int channel = 0, double timeout = 0.1);
+	void SingleAnalogOut(double signal, unsigned int channel = 1, double timeout = 0.1);
+	void SingleAnalogOut(double* signal);
 	double SingleAnalogRead(int channel = 0, double timeout = 0);
 	
 	void SingleDigitalOut(uint32_t val, uint32_t mask) ;

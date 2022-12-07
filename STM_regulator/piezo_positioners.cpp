@@ -198,17 +198,17 @@ void PiezoPositioners::ZFJumpTo(double position, Card& ZCard, double fine_range,
 	if (position > V_uplimit.z_proj)  position = V_uplimit.z_proj; 
 	if ((position_V.z_proj != position) && (abs(position_V.z_proj - position) > (fine_range / COARSE_TO_FINE))) {
 		if (position - position_V.z_proj > 0) {
-			for (int i = 1; i <= 5; i++) {
+			for (int i = 1; i <= 10; i++) {
 
-				ZCard.SingleAnalogOut((0.9 - 0.9 * i / 5) * fine_range, Z_OUT_FINE);
-				ZCard.SingleAnalogOut(((5 - i) * position_V.z_proj + i * position) / 5, Z_OUT);
+				ZCard.SingleAnalogOut((0.95 - 0.95 * i / 10) * fine_range, Z_OUT_FINE);
+				ZCard.SingleAnalogOut(((10 - i) * position_V.z_proj + i * position) / 10, Z_OUT);
 			}
 
 		}
 		else {
-			for (int i = 1; i <= 5; i++) {
-				ZCard.SingleAnalogOut(((5 - i) * position_V.z_proj * 0.98 + i * position) / 5, Z_OUT);
-				ZCard.SingleAnalogOut((-1 + 0.9 * i / 5) * fine_range, Z_OUT_FINE);
+			for (int i = 1; i <= 10; i++) {
+				ZCard.SingleAnalogOut(((10 - i) * position_V.z_proj * 0.99 + i * position) / 10, Z_OUT);
+				ZCard.SingleAnalogOut((-1 + 0.98 * i / 10) * fine_range, Z_OUT_FINE);
 
 			}
 		}

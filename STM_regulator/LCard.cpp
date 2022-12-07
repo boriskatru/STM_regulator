@@ -63,7 +63,7 @@ void ADC_Collect::print_f(string filename, string directory)
 	/*for (int i = 0; i < ch_count; i++) {
 		cout << "CHANNEL " << i << ":" << "	";
 	}*/
-	
+	file.precision(4);
 	for (int k = 0; k < s_ch_bufsz; k++) {
 		file << endl;
 		for (int i = 0; i < ch_count; i++) {
@@ -221,7 +221,7 @@ ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 	if (timeout_ms) {
 		uwait(timeout_ms * 1000);
 	}
-	else uwait(bufsize/2);
+	//else uwait(bufsize/2);
 	int recv_zero_cnt = 0;
 RECIEVE:
 	error = L502_Recv(hnd, buf, bufsize, bufsize );
@@ -241,8 +241,6 @@ RECIEVE:
 			exit(0);
 		}
 	}
-
-	
 
 	if (error < 0) cerr << "Îøèáêà  " << error << " â L502_Recv()" << endl;
 	error = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);

@@ -22,7 +22,7 @@ using namespace std;
 #define FORWARD true
 #define BACKWARD false
 ///#define Pc 0.0001
-#define Pc 0.000003
+#define Pc 0.0000000003
 #define Ic 0.0000001
 #define Dc 0
 #define MIN_STEP_SIZE 0.00015258789 // примерно 0.55 ангстрем в COARSE и 0.035 ангстрем в FINE
@@ -63,7 +63,6 @@ inline void make_logs(string folder, string text) {
 	char buffern[20];								// строка, в которой будет храниться текущая дата
 	time(&rawtime);									// текущая дата в секундах
 #pragma warning(suppress : 4996)
-
 	timeinfo = localtime(&rawtime);					// текущее локальное время, представленное в структуре
 
 	strftime(buffern, 20, "%x", timeinfo);	
@@ -74,24 +73,25 @@ inline void make_logs(string folder, string text) {
 	
 	std::filesystem::create_directories(folder + datestr);
 	ofstream file;
-	file.open("../../scans/" + datestr + "/" + "Logs.txt" , std::ofstream::out);
+	file.open("../../scans/" + datestr + "/" + "Logs.txt" , std::ios::app);
 	file << endl << timestr<< ":" << endl << text << endl;;
 	file.close();
 }
 inline double TrBiasStepper( double Vg, bool dir ) {
 	short int sign = 1;
-	if (dir == BACKWARD) sign = -1;
-
-	double ranges[4][2] = {
-		{ 0.440, 0.025 },
-		{ 0.414, 0.01 },
-		{ 0.400, 0.00305 },
-		{ 0.380, 6 * MIN_STEP_SIZE }
+	if (dir == 0) sign = -1;
+	double offset = 0.0;
+	double ranges[5][2] = {
+		{ 0.446, 0.025 },
+		{ 0.440, 0.012 },
+		{ 0.435, 0.006 },
+		{ 0.425, 0.00305 },
+		{ 0.410, 5 * MIN_STEP_SIZE }
 	};
-	for (int i = 0; i < 4; i++ ) {
-		if (Vg > ranges[i][0]) return (sign * ranges[i][1]);
+	for (int i = 0; i < 5; i++ ) {
+		if (Vg > ranges[i][0]- offset) return (sign * ranges[i][1]);
 	}
-	return 2 * MIN_STEP_SIZE;
+	return 2 * sign * MIN_STEP_SIZE;
 	
 	
 }	
@@ -161,7 +161,7 @@ public:
 	/// <param name="noise_limit_V">порог чуствительности к уму конвертера</param>
 	/// <param name="frequency">частота конвертера</param>
 	/// <param name="bias"></param>
-	Regulator(double i_offset = 0, double noise_limit_V = 0.05, double frequency = 10000, double bias = 0.3);
+	Regulator(double i_offset = 0, double noise_limit_V = 0.01, double frequency = 10000, double bias = 0.3);
 	~Regulator();
 
 
@@ -198,7 +198,7 @@ public:
 	/// <param name="steps">Количество шагов ретракта</param>
 	/// <param name="step_incr"> инкремент увеличения шага (в случае касания)</param>
 	/// <param name="rpt">повторов шага между его увеличением</param>
-	void Retract(int steps = 1, double step_incr = 0.4, double rpt = 2);
+	void Retract(int steps = 1, double step_incr = 0.4, double rpt = 2, string folder = "../../scans/");
 	/// <summary>
 	/// Предподъём иглы к обазцу
 	/// </summary>
@@ -207,7 +207,7 @@ public:
 	/// <param name="target_V">напряжение детектирования касания</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns>высоту касания в В</returns>
-	double rise(double bias_ = 3, double bwa = 0.1, double target_V = 0.1, double djump = MIN_STEP_SIZE/5);
+	double rise(double bias_ = 2, double bwa = 0.1, double target_V = 0.12, double djump = MIN_STEP_SIZE/5);
 	/// <summary>
 	/// Процедура лэндинга образца
 	/// </summary>
@@ -217,7 +217,7 @@ public:
 	/// <param name="delay_micro">задержка в мкс</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns> высота касания в В</returns>
-	double Landing(double bias_ = 1, double range = 4.5, double target_V = 0.05, double delay_micro = 0, double djump = MIN_STEP_SIZE/2);
+	double Landing(double bias_ = 2, double range = 5, double target_V = 0.15, double delay_micro = 0, double djump = 2*MIN_STEP_SIZE, string folder = "../../scans/");
 
 	////////////PID РЕГУЛЯТОРЫ////////////
 
@@ -313,11 +313,12 @@ public:
 	/// Калибровка шумогого сигнала с детектора в зависимости от напряжения на гейте калибровочного транзистора.
 	/// To calibrate Noise-V(gate) connect Z_coarse(NDAC2) to C1
 	/// </summary>
-	/// <param name="Vg_min">>минимальный гейт транзистора, В</param>
-	/// <param name="Vg_max">максимальный гейт транзистора, В</param>
-	/// <param name="incr">шаг калибровки гейта транзистора, В</param>
-	/// <param name="dir">путь сохранения файла</param>
-	void Pn_CVg_TransistorCalibration(double Vg_min = 0.32, double Vg_max = 0.56, double incr = 0.003, string folder="../../scans/");
+	/// <param name="Vg_min">> минимальный гейт транзистора, В</param>
+	/// <param name="Vg_max"> максимальный гейт транзистора, В</param>
+	/// <param name="incr"> шаг калибровки гейта транзистора, В</param>
+	/// <param name="delay"> задержка миежду измерениями для насыщения конденсаторов, мкс</param>
+	/// <param name="dir"> путь сохранения файла</param>
+	void Pn_CVg_TransistorCalibration(double Vg_min = 0.32, double Vg_max = 0.56, double incr = 0.003, int delay = 300000, string folder = "../../scans/");
 
 	/// <summary>
 	/// Калибровка сопротивления калибровочного транзистора от напряжения на гейте (по квази-трёхточке).
@@ -330,6 +331,6 @@ public:
 	/// <param name="Vbias_crit"> максимальное напряжение для подачи на калибровочный вход </param>
 	/// <param name="delay_us"> задержка между измерением точек</param>
 	/// <param name="dir">путь сохранения файла</param>
-	void R_CVg_TransistorCalibration(double incr = 0.003, double Vg_min = 0.32, double Vg_max = 0.56, double Vsd_crit = 0.05, double  Vbias_crit = 0.2, int delay_us = 600000, string folder = "../../scans/");
+	void R_CVg_TransistorCalibration(double incr = 0.002, double Vg_min = 0.35, double Vg_max = 0.56, double Vsd_crit = 0.05, double  Vbias_crit = 0.1, int delay_us = 150000, string folder = "../../scans/");
 };
 

@@ -65,20 +65,19 @@ NICard::NICard() : Card(1, 1, "NICard", 1) {
 	 //DAQmx Configure Code
 	/*********************************************/
 	DAQmxCreateTask("", &ai_0); // создаём задачу считывания сигнала с канала N0
-	DAQmxCreateTask("", &ao_0); // создаём вывода сигнала на канал NDAC1
-	DAQmxCreateTask("", &ao_1); // создаём вывода сигнала на канал NDAC2
+	DAQmxCreateTask("", &ao_0); // создаём вывода сигнала на канал NDAC
+	
 
 	DAQmxCreateAIVoltageChan(ai_0, "Dev1/ai0", "", DAQmx_Val_RSE, -5.0, 5.0, DAQmx_Val_Volts, NULL);	// настраиваем задачу считывания
 	DAQmxCfgSampClkTiming(ai_0, "", 250000.0, DAQmx_Val_Rising, DAQmx_Val_HWTimedSinglePoint, PTR_);
 	DAQmxRegisterDoneEvent(ai_0, 0, DoneCallback, NULL);
 
 
-	DAQmxCreateAOVoltageChan(ao_0, "Dev1/ao0", "", -5.0, 5.0, DAQmx_Val_Volts, NULL);					// настраиваем задачу вывода  NDAC1
+	DAQmxCreateAOVoltageChan(ao_0, "Dev1/ao0:1", "", -5.0, 5.0, DAQmx_Val_Volts, NULL);					// настраиваем задачу вывода  NDAC
 	DAQmxCfgSampClkTiming(ao_0, "", 900000.0, DAQmx_Val_Rising, DAQmx_Val_ContSamps, PTW_);
 
 
-	DAQmxCreateAOVoltageChan(ao_1, "Dev1/ao1", "", -5.0, 5.0, DAQmx_Val_Volts, NULL);					// настраиваем задачу вывода  NDAC2
-	DAQmxCfgSampClkTiming(ao_1, "", 900000.0, DAQmx_Val_Rising, DAQmx_Val_ContSamps, PTW_);
+	
 	is_writing[0] = 0;
 }
 
@@ -95,27 +94,53 @@ void NICard::SingleAnalogOut(double signal, unsigned int channel , double timeou
 
 	if (channel) {
 		if (!is_writing[1]) {
-			DAQmxStopTask(ao_0);
-			is_writing[0] = 0;
-			DAQmxStartTask(ao_1);
+			DAQmxStartTask(ao_0);
+			//DAQmxStopTask(ao_0);
+			//is_writing[0] = 0;
+			//DAQmxStartTask(ao_1);
 			is_writing[1] = 1;
 		}
-		DAQmxWriteAnalogScalarF64(ao_1, autostart, timeout, signal, NULL);
+		double dat[2] = { cur_volt[0], signal };
+		//cout << "!!" << endl;
+		DAQmxWriteAnalogF64(ao_0, 1,autostart, timeout, 1, dat , NULL, NULL);
+		//(ao_1, autostart, timeout, signal, NULL);
 		cur_volt[1] = signal;
 		
 	}
 	else {
 		
 		if (!is_writing[0]) {
-			DAQmxStopTask(ao_1);
-			is_writing[1] = 0;
+			//DAQmxStopTask(ao_1);
+			//is_writing[1] = 0;
 			DAQmxStartTask(ao_0);
 			is_writing[0] = 1;
 		}
-		 DAQmxWriteAnalogScalarF64(ao_0, autostart, timeout, signal, NULL);
+		double dat[2] = { signal, cur_volt[1]};
+		//cout << endl;
+		DAQmxWriteAnalogF64(ao_0, 1, autostart, timeout, 1, dat, NULL, NULL);
+		 //DAQmxWriteAnalogScalarF64(ao_0, autostart, timeout, signal, NULL);
 		cur_volt[0] = signal;
 		
 	}
+}
+void NICard::SingleAnalogOut(double* signal) {
+
+	
+	if (!is_writing[1]) {
+		DAQmxStartTask(ao_0);
+		//DAQmxStopTask(ao_0);
+		//is_writing[0] = 0;
+		//DAQmxStartTask(ao_1);
+		is_writing[1] = 1;
+	}
+		
+	//cout << "!!" << endl;
+	DAQmxWriteAnalogF64(ao_0, 1, autostart, 0.1, 1, signal, NULL, NULL);
+	//(ao_1, autostart, timeout, signal, NULL);
+	cur_volt[1] = signal[1];
+	cur_volt[0] = signal[0];
+	
+	
 }
 double NICard::SingleAnalogRead(int channel, double timeout) {
 	if (!is_reading) {

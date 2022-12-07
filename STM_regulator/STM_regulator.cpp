@@ -23,7 +23,7 @@ int main()
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     SetThreadPriority(GetCurrentProcess(), THREAD_PRIORITY_TIME_CRITICAL);
     cout << GetPriorityClass(GetCurrentProcess()) << endl;
-    
+    std::cout.precision(4);
 
     Regulator regul;
     //getchar(); getchar();
@@ -34,25 +34,30 @@ int main()
     }
     double data1 = regul.ZCard.SingleAnalogRead();
     Timer tmr;
-    //regul.ZCard.SingleAnalogOut(0.05, 0U);
-    //uwait(1000000000);
+    string timestr = get_time_string();
+    //regul.Retract(5,0.3,2);
+    //regul.Landing(1, 5, 0.08);
+    //regul.TouchScan(0.5, 0.1, 0.05, 8000 * MIN_STEP_SIZE, 8000 * MIN_STEP_SIZE, 40 * MIN_STEP_SIZE, 40 * MIN_STEP_SIZE);
+    int stop = 0;
+    double  height = regul.IntPID_exp(1, 0.2, 200000000, 0);
+    
+    for (int count = 1; count < 100; count++) {
+        
+        regul.XYCard.StartReadStream();
+        height = regul.IntPID_exp(1, 0.2, 5000000, height);            
+        data = regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2);
+        regul.XYCard.StopReadStream();
+        data.print_f("VANC_" + to_string(count) + ".dat", "../../scans/" + timestr);
+        cout << "done   " << count << " VANCS" << endl;
+        //cin >> stop;
+        //if (stop) break;
+    }
+    regul.MHome();
     //while (true) {
+    //    regul.piezo.ZFJumpTo(2 * sin(tmr.get_full_interval() / 20000)+2, regul.ZCard);
+    //    //regul.ZCard.SingleAnalogOut(2 * sin(tmr.get_full_interval() / 20000), 0U);
     //   
-    //    regul.ZCard.SingleAnalogOut(5*sin(tmr.get_full_interval()/20000),0U);
-    //    regul.ZCard.SingleAnalogOut(5 * cos(tmr.get_full_interval() / 20000), 1U);
-    //    //regul.ZCard.SingleAnalogOut(5 * sin(tmr.get_full_interval() / 1000), 0U);
-    //}
-    //for (int i = 0; i < 5; i++) {
-    //    
-    //    regul.XYCard.StopReadStream();
-    //    regul.XYCard.StartReadStream();
-    //    //regul.ZCard.SingleAnalogOut((i / 2) % 5 , 0U);
-    //    regul.ZCard.SingleAnalogOut((double)i / 5, 1U);
-    //    //cout << "Ndac0  value: " << regul.ZCard.cur_volt[0] << endl;
-    //    cout << "Ndac0  value: " << regul.ZCard.cur_volt[1] << endl;
-    //    cout << endl;
-    //    cout << "ch " << 3 << " value: " << regul.XYCard.AnalogRead(100).Average(ADC_BUF_SIZE_2, 3) << endl;
-    //}
+    // }
     cout << endl << "Programm started..." << endl;
     /////////////////КОНЕЦ ТЕСТА//////////////////////////
     //for (int i = 0; i < 500; i++) {
@@ -61,22 +66,22 @@ int main()
     //    uwait(20000);
     //}
     //getchar(); getchar();
-
+  
 
     //                   КАЛИБРОВКИ                    //
-    ///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
-    //regul.Pn_CVg_TransistorCalibration(0.36,0.6,0.002);          //  To calibrate Noise-V(gate) connect Z_coarse(NDAC2) to C1
+    //////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
+    //regul.Pn_CVg_TransistorCalibration(0.35,0.6,0.002);           // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
    
-    regul.R_CVg_TransistorCalibration(0.002, 0.382, 0.55);    // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC1) to C2; Noise (F1) -C3
-    //regul.Retract(20,0.5,1);
+    //regul.R_CVg_TransistorCalibration();                          // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; LDAC3 to amplified C3
+    
 
     getchar(); getchar();
    
-   string timestr = get_time_string(); //текстовая строка с датой (для создания файлов и папок)
+   //текстовая строка с датой (для создания файлов и папок)
 
+   
 
-
-    //////////СКРИПТ ДЛЯ КАЛИБРОВКИ ДЕТЕКТОРА МОЩНОСТИ////////////////
+    //////////////СКРИПТ ДЛЯ КАЛИБРОВКИ ДЕТЕКТОРА МОЩНОСТИ////////////////
   /* string timestr = get_time_string();
    ofstream file;
    file.open("calibration_detector.txt", std::ofstream::out);
@@ -121,14 +126,3 @@ int main()
     regul.~Regulator();
     getchar(); getchar();
 }
-
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
-
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
