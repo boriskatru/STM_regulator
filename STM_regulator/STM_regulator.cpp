@@ -26,28 +26,42 @@ int main()
     std::cout.precision(4);
 
     Regulator regul;
+    
     //getchar(); getchar();
-    //////////ПРОВЕРКА СИГНАЛА ПЛАТ//////////////////////////
+    //////////////ПРОВЕРКА СИГНАЛА ПЛАТ///////////////////////
     ADC_Collect data = regul.XYCard.AnalogRead(100, ADC_BUF_SIZE_2);
     for (int i = 0; i < regul.XYCard.data.ch_count; i++) {
-        cout << "ch " << i << " value: " << data.Average(8, i) << endl;
+        cout << "LC ch " << i << " value: " << data.Average(8, i) << endl;
     }
     double data1 = regul.ZCard.SingleAnalogRead();
+    cout << "NI ch value: " << data1 << endl;
     Timer tmr;
     string timestr = get_time_string();
-    //regul.Retract(5,0.3,2);
-    //regul.Landing(1, 5, 0.08);
-    //regul.TouchScan(0.5, 0.1, 0.05, 8000 * MIN_STEP_SIZE, 8000 * MIN_STEP_SIZE, 40 * MIN_STEP_SIZE, 40 * MIN_STEP_SIZE);
-    int stop = 0;
-    double  height = regul.IntPID_exp(1, 0.2, 200000000, 0);
+    cout << endl << "Programm started..." << endl;
+   // regul.R_CVg_TransistorCalibration();                              // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; X4 to amplified C3
+   // regul.Pn_CVg_TransistorCalibration(0.46, 0.62, 0.002);            // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
+    //getchar(); getchar();
+   
+
     
-    for (int count = 1; count < 100; count++) {
+    //regul.Retract(5,0.3,2);
+ 
+    //regul.Landing(4, 4, 0.25);
+   // regul.ZCard.BackstepZ();
+    //return 0;
+    //regul.rise();
+    //regul.TouchScan(0.3, 0.15, 0.04, 4, 4, 0.01, 0.01, MIN_STEP_SIZE, 2);
+    //return 0;
+    int stop = 0;
+    double  height = regul.IntPID_exp(0.5, 0.3, 240*1000000, 0);
+    
+    for (int count = 1; count <= 100; count++) {
         
         regul.XYCard.StartReadStream();
-        height = regul.IntPID_exp(1, 0.2, 5000000, height);            
+        height = regul.IntPID_exp(0.5, 0.3, 3*1000000, height);
         data = regul.XYCard.AnalogRead(0, ADC_BUF_SIZE_2);
         regul.XYCard.StopReadStream();
-        data.print_f("VANC_" + to_string(count) + ".dat", "../../scans/" + timestr);
+        data.print_f_VANC("VANC_" + to_string(count) + ".dat", "../../scans/" + timestr);
         cout << "done   " << count << " VANCS" << endl;
         //cin >> stop;
         //if (stop) break;
@@ -58,7 +72,7 @@ int main()
     //    //regul.ZCard.SingleAnalogOut(2 * sin(tmr.get_full_interval() / 20000), 0U);
     //   
     // }
-    cout << endl << "Programm started..." << endl;
+   
     /////////////////КОНЕЦ ТЕСТА//////////////////////////
     //for (int i = 0; i < 500; i++) {
     //    regul.ZStep(FORWARD,3);
@@ -72,10 +86,10 @@ int main()
     //////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
     //regul.Pn_CVg_TransistorCalibration(0.35,0.6,0.002);           // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
    
-    //regul.R_CVg_TransistorCalibration();                          // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; LDAC3 to amplified C3
+    //regul.R_CVg_TransistorCalibration();                          // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; X3 to amplified C3
     
 
-    getchar(); getchar();
+  
    
    //текстовая строка с датой (для создания файлов и папок)
 
@@ -122,7 +136,7 @@ int main()
        cout << "done   " << i << "VANCS" << endl;
    }*/
    //////////////КОНЕЦ СКРИПТА//////////////////
-
+    cout << endl << "Programm finished..." << endl;
     regul.~Regulator();
     getchar(); getchar();
 }

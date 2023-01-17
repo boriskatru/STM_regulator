@@ -206,6 +206,7 @@ void NICard::StartReadStream()
 }
 
 void NICard::FullStop() {
+	SingleAnalogOut(ZERO_ARR);
 	read_cnt = 0;
 	is_reading = 0;
 	is_writing[0] = is_writing[1]= 1;

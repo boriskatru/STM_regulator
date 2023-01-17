@@ -11,7 +11,11 @@
 #include "Card.h"
 
 #define ANALOG_OUT_FLAG 0x0001
-
+#define ADC_TGT_FREQ 2000000
+#define BIAS_CH 0
+#define CURRENT_CH 3
+#define NOISE_CH 2
+#define R_CALIBR_CH 3
 
 static char serial_list[MAX_MODULES_CNT][L502_SERIAL_SIZE];
 const char serial_1[L502_SERIAL_SIZE] = "4T439903";
@@ -55,6 +59,11 @@ public:
 	/// </summary>
 	/// <param name="filename">имя и путь к создаваемому файлу</param>
 	void print_f(string filename="VAC.dat", string directory = "../../scans");
+	/// <summary>
+	/// Запись данных ВАХ в файл
+	/// </summary>
+	/// <param name="filename">имя и путь к создаваемому файлу</param>
+	void print_f_VANC(string filename = "VANC.dat", string directory = "../../scans");
 };
 
 
@@ -62,7 +71,7 @@ class LCard: public Card {
 	/// <summary>
 	/// Частота опроса ADC
 	/// </summary>
-	double ADC_COLLECT_FREQ = 2000000;
+	double ADC_COLLECT_FREQ = ADC_TGT_FREQ;
 	double ADC_FRAME_FREQ = 0;
 	uint32_t* buf;
 

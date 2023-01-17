@@ -73,6 +73,21 @@ void ADC_Collect::print_f(string filename, string directory)
 	
 }
 
+void ADC_Collect::print_f_VANC(string filename, string directory)
+{
+	std::filesystem::create_directories(directory);
+	ofstream file;
+	file.open(directory + "/" + filename, std::ofstream::out);	
+	file.precision(4);
+	for (int k = 0; k < s_ch_bufsz; k++) {		
+		file << input[BIAS_CH   ][k] << "	";
+		file << input[CURRENT_CH][k] << "	";
+		file << input[NOISE_CH  ][k] << "	";
+		file << "\n";
+	}
+	file.close();
+}
+
 LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), data(ADC_CH_COUNT, ADC_BUF_SIZE), next_lch(0) {
 	
 	buf = (uint32_t*)calloc(ADC_BUF_SIZE, sizeof(uint32_t));
@@ -218,18 +233,18 @@ double LCard::SingleDigitalRead() {
 /// </summary>
 ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 	StartReadStream();
-	if (timeout_ms) {
+	if (timeout_ms!=0) {
 		uwait(timeout_ms * 1000);
 	}
 	//else uwait(bufsize/2);
 	int recv_zero_cnt = 0;
 RECIEVE:
-	error = L502_Recv(hnd, buf, bufsize, bufsize );
+	error = L502_Recv(hnd, buf, bufsize, bufsize/100 );
 	count_ADC_data = error;
 	//cout << endl << count_ADC_data << endl;
 	while (count_ADC_data == 0) {
 		cout << "no data" << endl << endl;
-		error = L502_Recv(hnd, buf, bufsize, bufsize);
+		error = L502_Recv(hnd, buf, bufsize, bufsize/10);
 		recv_zero_cnt++;
 		if (recv_zero_cnt > RECIVE_COUNT_TIMEOUT) {
 			if (serial == serial_1)
@@ -266,7 +281,7 @@ void LCard::StopReadStream() {
 void LCard::StartReadStream() {
 	if (is_reading == 0) {
 		error = L502_StreamsStart(hnd);
-		if (error != 0) {
+		if (error < 0) {
 			cerr << "Îøèáêà  " << error << " â L502_StreamsStart()" << endl;
 
 		}
@@ -274,13 +289,13 @@ void LCard::StartReadStream() {
 	}
 }
 void LCard::FullStop()
-{
-	StopReadStream();
+{	
 	SingleAnalogOut(0, 0U);
 	SingleAnalogOut(0, 1U);
+	StopReadStream();
 }
 LCard::~LCard() {
-	FullStop();
+	
 	error = L502_Close(hnd);
 	if (error != 0) cerr << "Îøèáêà  " << error << "  â L502_Close()" << endl;
 	error = L502_Free(hnd);
