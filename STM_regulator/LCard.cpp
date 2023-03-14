@@ -8,7 +8,7 @@ ADC_Collect::ADC_Collect(int ch_count, int ADC_BUF_SIZE ) :
 	ch_count(ch_count),
 	s_ch_bufsz(ADC_BUF_SIZE / ch_count),
 	err_cnt(0),
-	input(ch_count, vector<double>(ADC_BUF_SIZE / ch_count, 0))/*, swap(0)*/ {
+	input(ch_count, vector<float>(ADC_BUF_SIZE / ch_count, 0))/*, swap(0)*/ {
 	current_data = (double*)calloc( ADC_BUF_SIZE, sizeof(double));
 	for (int i = 0; i < ADC_BUF_SIZE; i++) {
 		current_data[i] = 0;
@@ -73,19 +73,23 @@ void ADC_Collect::print_f(string filename, string directory)
 	
 }
 
-void ADC_Collect::print_f_VANC(string filename, string directory)
+void ADC_Collect::print_f_VANC(string filename, string filetype, string directory)
 {
 	std::filesystem::create_directories(directory);
-	ofstream file;
-	file.open(directory + "/" + filename, std::ofstream::out);	
-	file.precision(4);
-	for (int k = 0; k < s_ch_bufsz; k++) {		
-		file << input[BIAS_CH   ][k] << "	";
-		file << input[CURRENT_CH][k] << "	";
-		file << input[NOISE_CH  ][k] << "	";
-		file << "\n";
-	}
-	file.close();
+	FILE* fileV;
+	FILE* fileA;
+	FILE* fileN;
+
+	fopen_s(&fileV, (directory + "/" + filename +"V" + filetype).data(), "wb");
+	fopen_s(&fileA, (directory + "/" + filename + "A" + filetype).data(), "wb");
+	fopen_s(&fileN, (directory + "/" + filename + "N" + filetype).data(), "wb");
+	fwrite(input[BIAS_CH].data(), sizeof input[BIAS_CH][0], input[BIAS_CH].size(), fileV);
+	fwrite(input[CURRENT_CH].data(), sizeof input[CURRENT_CH][0], input[CURRENT_CH].size(), fileA);
+	fwrite(input[NOISE_CH].data(), sizeof input[NOISE_CH][0], input[NOISE_CH].size(), fileN);
+	
+	fclose(fileV);
+	fclose(fileA);
+	fclose(fileN);
 }
 
 LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), data(ADC_CH_COUNT, ADC_BUF_SIZE), next_lch(0) {

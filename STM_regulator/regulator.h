@@ -22,7 +22,9 @@ using namespace std;
 #define FORWARD true
 #define BACKWARD false
 ///#define Pc 0.0001
-#define Pc 0.000000003
+#define Pc 0.00000003
+//0.000000003 Boris original
+// 0.03 my value ( very stable)
 #define Ic 0.0000005
 #define Dc 0
 #define MIN_STEP_SIZE 0.00015258789 // примерно 0.55 ангстрем в COARSE и 0.035 ангстрем в FINE
@@ -82,10 +84,10 @@ inline double TrBiasStepper( double Vg, bool dir ) {
 	if (dir == 0) sign = -1;
 	double offset = 0.0815;
 	double ranges[5][2] = {
-		{ 0.446, 0.025 },
-		{ 0.430, 0.012 },
-		{ 0.420, 0.006 },
-		{ 0.410, 0.00305 },
+		{ 0.446, 0.1 },
+		{ 0.430, 5*0.012 },
+		{ 0.420, 2*0.006 },
+		{ 0.410, 2*0.00305 },
 		{ 0.400, 5 * MIN_STEP_SIZE }
 	};
 	for (int i = 0; i < 5; i++ ) {
@@ -142,6 +144,31 @@ class Regulator
 	/// <param name="dir">направление(назад/вперёд)</param>
 	/// <param name="step_size"> напряжение шага</param>
 	void Step(int axis, int dir, double step_size = 5);
+	/// <summary>
+	/// Измерение единичной ВАХ(вольт-амперной характеристики)
+	/// </summary>
+	/// <param name="max">max напряжение на игле</param>
+	/// <param name="min">min напряжение на игле</param>
+	/// <param name="step">шаг по напряжению</param>
+	/// <param name="name">номер ВАХ</param>
+	/// <param name="delay_us">задержка в мкс между измерениями</param>
+	/// <returns>Возвращает ВАХ в формате VAC</returns>
+	VAC VAC_(double max, double min, double step, int name = 0, double delay_us = 0, string folder = "../../scans/");
+	/// <summary>
+	///  Измерение единичной ШВАХ(шумо-вольт-амперной характеристики)
+	/// </summary>
+	/// <param name="max">max напряжение на игле</param>
+	/// <param name="min">min напряжение на игле</param>
+	/// <param name="step">шаг по напряжению</param>
+	/// <param name="name">номер ШВАХ</param>
+	/// <param name="delay_us">задержкав мкс между измерениями</param>
+	/// <returns>Возвращает ШВАХ в формате VANC</returns>
+	VANC VANC_(double max, double min, double step, int name = 0, double delay_us = 0, string folder = "../../scans/");
+	/// <summary>
+	/// Очистка иглы переменным напряжением. НЕ АКТУАЛЬНО ДЛЯ Lock-in method!!!
+	/// </summary>
+	/// <param name="cnt">количество циклов</param>
+	void ClearTip(int cnt = 25);
 
 public:
 	LCard XYCard;
@@ -238,7 +265,7 @@ public:
 	/// <param name="duration_us">длительность периода регуляции</param>
 	/// <param name="start_offset"> смещение оси Z в начале скана </param>
 	/// <param name="I_to_nA"> коэффициент конвертации сигнала напряжения в ток </param>
-	double IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_pos = 0, double I_to_nA = 10, double touch_lim = -0.0015, string folder = "../../scans/");
+	double IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_pos = 0, int polarity = 1, double I_to_nA = 10, double touch_lim = -0.0015, string folder = "../../scans/");
 	/// <summary>
 	/// регуляция на основе внешнего ПИД с подъёмом между шагами:
 	/// </summary>
@@ -253,25 +280,16 @@ public:
 	////////////ИЗМЕРЕНИЯ И СКАНЫ////////////
 
 	/// <summary>
-	/// Измерение единичной ВАХ(вольт-амперной характеристики)
+	/// Измерение набора ШВАХ(шум-вольт-амперной характеристики)
 	/// </summary>
-	/// <param name="max">max напряжение на игле</param>
-	/// <param name="min">min напряжение на игле</param>
-	/// <param name="step">шаг по напряжению</param>
-	/// <param name="name">номер ВАХ</param>
-	/// <param name="delay_us">задержка в мкс между измерениями</param>
-	/// <returns>Возвращает ВАХ в формате VAC</returns>
-	VAC VAC_(double max, double min, double step, int name = 0, double delay_us = 0, string folder = "../../scans/");
-	/// <summary>
-	///  Измерение единичной ШВАХ(шумо-вольт-амперной характеристики)
-	/// </summary>
-	/// <param name="max">max напряжение на игле</param>
-	/// <param name="min">min напряжение на игле</param>
-	/// <param name="step">шаг по напряжению</param>
-	/// <param name="name">номер ШВАХ</param>
-	/// <param name="delay_us">задержкав мкс между измерениями</param>
-	/// <returns>Возвращает ШВАХ в формате VANC</returns>
-	VANC VANC_(double max, double min, double step, int name = 0, double delay_us = 0, string folder = "../../scans/");
+	/// <param name="count"> количество измерений</param>
+	/// <param name="target_V"> уставка по току </param>
+	/// <param name="bias"> напряжение на игле</param>
+	/// <param name="delay"> задержка между считываниями, с (должна быть больше чем период сбора)</param>
+	/// <param name="pre_wait"> время подвода и входа в режим перед измерениями, секунд</param>
+	/// <param name="folder"></param>
+	void VANC_PID(int count, double target_V = 0.2, double bias_ = 0.2, double pre_wait = 200, double delay = 1 + ADC_BUF_SIZE_2 / 2000000, string folder = "../../scans/");
+	
 
 	/// <summary>
 	///  Сканирование касанием с подъёмом
@@ -285,8 +303,40 @@ public:
 	/// <param name="y_step">шаг по оси Y</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <param name="up_mult"> дистанция остановки от поверхности при первичном подъёме (в единицах bwa) </param>
+	/// <param name="pre_wait"> время ожидания после подъёма перед сканом (для релаксации пьезиков) </param>
 	void TouchScan(double bias_ = 0.6, double bwa = 0.15, double crit_V = 0.25, double x_dim = 15000 * MIN_STEP_SIZE, double y_dim = 15000 * MIN_STEP_SIZE,
-		double x_step = 120 * MIN_STEP_SIZE, double y_step = 120 * MIN_STEP_SIZE, double djump = MIN_STEP_SIZE, int up_mult = 3, string folder = "../../scans/");
+		double x_step = 120 * MIN_STEP_SIZE, double y_step = 120 * MIN_STEP_SIZE, double djump = MIN_STEP_SIZE, int up_mult = 3, int pre_wait = 300, string folder = "../../scans/");
+
+	/// <summary>
+	///  Сканирование касанием с подъёмом
+	/// </summary>
+	/// <param name="bias_">напряжение на игле, В</param>
+	/// <param name="target_V">напряжение детектирования касания</param>
+	/// <param name="x_dim">размер скана по оси X</param>
+	/// <param name="y_dim">размер скана по оси Y</param>
+	/// <param name="x_step">шаг по оси X</param>
+	/// <param name="y_step">шаг по оси Y</param>
+	/// <param name="djump">размер шага плавной развёртки</param>
+	
+
+	/// <summary>
+	/// Сканирование тока на постоянной высоте
+	/// </summary>
+	/// <param name="bias_"> напряжение на игле, В</param>
+	/// <param name="target_V"> напряжение детектирования касания</param>
+	/// <param name="pid_delay"> время на поддержание уставки между строками, секунд</param>
+	/// <param name="point_delay"> время на точку, микросекунд</param>
+	/// <param name="x_dim">размер скана по оси X</param>
+	/// <param name="y_dim">размер скана по оси Y</param>
+	/// <param name="x_step">шаг по оси X</param>
+	/// <param name="y_step">шаг по оси Y</param>
+	/// <param name="djump">размер шага плавной развёртки</param>
+	/// <param name="bwa"> высота отскока перемещения</param>
+	/// <param name="pre_wait"> выдержка перед сканом, секунд</param>
+	/// <param name="folder"></param>
+	void ConstH_Scan(double bias_ = 0.5, double target_V = 0.2, double pid_delay = 2, double point_delay = 2000, double x_dim = 400 * MIN_STEP_SIZE, double y_dim = 400 * MIN_STEP_SIZE,
+		double x_step = 1 * MIN_STEP_SIZE, double y_step = 1 * MIN_STEP_SIZE, double djump = MIN_STEP_SIZE, double bwa = 0.25, int pre_wait = 200, string folder = "../../scans/");
+
 	/// <summary>
 	/// Скан со сканированием VAC в каждой точке
 	/// </summary>
@@ -302,12 +352,7 @@ public:
 	/// <param name="points_num"></param>
 	/// <param name="file"></param>
 	/// <param name="filename"></param>
-	void Calibration(int points_num, ofstream file, string filename = "Calibration.txt");
-	/// <summary>
-	/// Очистка иглы переменным напряжением. НЕ АКТУАЛЬНО ДЛЯ Lock-in method!!!
-	/// </summary>
-	/// <param name="cnt">количество циклов</param>
-	void ClearTip(int cnt = 25);
+	void FullCalibration(int points_num, ofstream file, string filename = "Calibration.txt");
 
 	/// <summary>
 	/// Калибровка шумогого сигнала с детектора в зависимости от напряжения на гейте калибровочного транзистора.
@@ -331,6 +376,6 @@ public:
 	/// <param name="Vbias_crit"> максимальное напряжение для подачи на калибровочный вход </param>
 	/// <param name="delay_us"> задержка между измерением точек</param>
 	/// <param name="dir">путь сохранения файла</param>
-	void R_CVg_TransistorCalibration(double incr = 0.002, double Vg_min = 0.45, double Vg_max = 0.62, double Vsd_crit = 0.1, double  Vbias_crit = 0.15, int delay_us = 150000, string folder = "../../scans/");
+	void R_CVg_TransistorCalibration(double incr = 0.002, double Vg_min = 0.45, double Vg_max = 0.62, double Vsd_crit = 0.1, double  Vbias_crit = 1, int delay_us = 100000, string folder = "../../scans/");
 };
 

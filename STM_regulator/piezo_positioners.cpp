@@ -200,7 +200,7 @@ void PiezoPositioners::ZFJumpTo(double position, Card& ZCard, double fine_range,
 		if (position - position_V.z_proj > 0) {
 			for (int i = 1; i <= 10; i++) {
 
-				ZCard.SingleAnalogOut((0.95 - 0.95 * i / 10) * fine_range, Z_OUT_FINE);
+				ZCard.SingleAnalogOut((0.98 - 0.98 * i / 10) * fine_range, Z_OUT_FINE);
 				ZCard.SingleAnalogOut(((10 - i) * position_V.z_proj + i * position) / 10, Z_OUT);
 			}
 
@@ -250,10 +250,16 @@ void PiezoPositioners::Move(Vecter distance, double delay_micro, double djump, C
 void PiezoPositioners::MoveTo(Vecter destination, double delay_micro, double djump, Card& ZCard, Card& XYCard, double (*check)(double) ) {
 	Vecter relative = destination - position_V;
 	int steps = trunc((relative / djump).len());
+	Vecter norm_relative = relative.Normalize();
 	for (int i = 0; i < steps; i++) {
-		JumpTo(position_V + relative.Normalize() * djump, ZCard, XYCard);
+		JumpTo(position_V + norm_relative * djump, ZCard, XYCard);
 		uwait(delay_micro);
-		//cout << "X: " << position_V.x_proj << "Y: " << position_V.x_proj << endl;
+		/*if (i % 5000 == 0) {
+			cout << endl << endl;
+			cout << "X: " << position_V.x_proj << "  Y: " << position_V.y_proj << endl;
+			cout << "X rel_norm: " << norm_relative.x_proj << "  Y rel_norm: " << norm_relative.y_proj << endl;
+		}*/
+		
 	}
 	JumpTo(destination, ZCard, XYCard);
 }

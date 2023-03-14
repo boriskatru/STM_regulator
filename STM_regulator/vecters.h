@@ -63,10 +63,10 @@ typedef struct Vecter
     inline Vecter Normalize()
     {
         Vecter tmp;
-
-        tmp.z_proj = z_proj / this->len();
-        tmp.y_proj = x_proj / this->len();
-        tmp.x_proj = x_proj / this->len();
+        double len = this->len();
+        tmp.z_proj = z_proj / len;
+        tmp.y_proj = y_proj / len;
+        tmp.x_proj = x_proj / len;
         return tmp;
     }
 } Vecter;

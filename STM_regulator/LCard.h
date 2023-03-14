@@ -4,7 +4,7 @@
 #include <math.h>
 #include <iostream>
 #include <string>
-#include <chrono>
+#include <chrono>-
 #include <filesystem>
 #include "wait_bh.h"
 #include "l502api.h"
@@ -29,7 +29,7 @@ class ADC_Collect {
 public:
 	int ch_count, s_ch_bufsz;
 	vector<double> average;
-	vector<vector<double>> input;
+	vector<vector<float>> input;
 	int err_cnt = 0;
 	int recv_cnt = 0;
 	double *current_data;
@@ -63,7 +63,7 @@ public:
 	/// Запись данных ВАХ в файл
 	/// </summary>
 	/// <param name="filename">имя и путь к создаваемому файлу</param>
-	void print_f_VANC(string filename = "VANC.dat", string directory = "../../scans");
+	void print_f_VANC(string filename = "VANC", string filetype= ".bin", string directory = "../../scans");
 };
 
 
