@@ -92,7 +92,7 @@ void ADC_Collect::print_f_VANC(string filename, string filetype, string director
 	fclose(fileN);
 }
 
-LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), data(ADC_CH_COUNT, ADC_BUF_SIZE), next_lch(0) {
+LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), data(ADC_CH_COUNT, ADC_BUF_SIZE), next_lch(0), ADC_CH_COUNT(ADC_CH_COUNT) {
 	
 	buf = (uint32_t*)calloc(ADC_BUF_SIZE, sizeof(uint32_t));
 	get_list_res = L502_GetSerialList(serial_list, MAX_MODULES_CNT, L502_GETDEVS_FLAGS_ONLY_NOT_OPENED, NULL);
@@ -124,16 +124,35 @@ LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZ
 	if (error != 0) cerr << "Ошибка  " << error << "  в L502_Open()" << endl;
 
 	error = L502_SetLChannelCount(hnd, ADC_CH_COUNT);
-	for (int i = 0; i < ADC_CH_COUNT; i++) {
-		if (!error)
-		{
-			/* первый логический канал соответствует измерению 1 канала
-			относительно общей земли */
-			error = L502_SetLChannel(hnd, i, i, L502_LCH_MODE_COMM, L502_ADC_RANGE_10, 0);
-			if (error)
-				cout << "Ошибка в L502_SetLChannel()" << error << endl;
-		}
-	}
+
+	//for (int i = 0; i < ADC_CH_COUNT; i++) {
+	//	if (!error)
+	//	{
+	//		/* первый логический канал соответствует измерению 1 канала
+	//		относительно общей земли */
+	//		error = L502_SetLChannel(hnd, i, i, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	//		if (error)
+	//			cout << "Ошибка в L502_SetLChannel()" << error << endl;
+	//	}
+	//}
+	error = L502_SetLChannel(hnd, 0, 0, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	if (error)
+		cout << "Ошибка в L502_SetLChannel()" << error << endl;
+	error = L502_SetLChannel(hnd, 1, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	if (error)
+		cout << "Ошибка в L502_SetLChannel()" << error << endl;
+	error = L502_SetLChannel(hnd, 2, 2, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	if (error)
+		cout << "Ошибка в L502_SetLChannel()" << error << endl;
+	error = L502_SetLChannel(hnd, 3, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	if (error)
+		cout << "Ошибка в L502_SetLChannel()" << error << endl;
+	error = L502_SetLChannel(hnd, 4, 3, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	if (error)
+		cout << "Ошибка в L502_SetLChannel()" << error << endl;
+	error = L502_SetLChannel(hnd, 5, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	if (error)
+		cout << "Ошибка в L502_SetLChannel()" << error << endl;
 
 	error = L502_AsyncOutDac(hnd, L502_DAC_CH1, 0.0, 0x0001) + L502_AsyncOutDac(hnd, L502_DAC_CH2, 0.0, 0x0001);
 	while (error != 0) {
@@ -242,6 +261,7 @@ ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
 	}
 	//else uwait(bufsize/2);
 	int recv_zero_cnt = 0;
+	
 RECIEVE:
 	error = L502_Recv(hnd, buf, bufsize, bufsize/100 );
 	count_ADC_data = error;
@@ -263,6 +283,7 @@ RECIEVE:
 
 	if (error < 0) cerr << "Ошибка  " << error << " в L502_Recv()" << endl;
 	error = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
+	
 	if (error == -140) {
 		StopReadStream();
 		StartReadStream();

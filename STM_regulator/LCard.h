@@ -13,9 +13,9 @@
 #define ANALOG_OUT_FLAG 0x0001
 #define ADC_TGT_FREQ 2000000
 #define BIAS_CH 0
-#define CURRENT_CH 3
+#define CURRENT_CH 4
 #define NOISE_CH 2
-#define R_CALIBR_CH 3
+#define R_CALIBR_CH 4
 
 static char serial_list[MAX_MODULES_CNT][L502_SERIAL_SIZE];
 const char serial_1[L502_SERIAL_SIZE] = "4T439903";
@@ -38,7 +38,7 @@ public:
 	/// </summary>
 	/// <param name="ch_count"> Количество каналов считывания с платы </param>
 	/// <param name="ADC_BUF_SIZE"> Размер буфера чтения </param>
-	ADC_Collect(int ch_count = 4, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
+	ADC_Collect(int ch_count = 6, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
 	/// <summary>
 	/// Обработка данных с карты
 	/// </summary>
@@ -73,6 +73,7 @@ class LCard: public Card {
 	/// </summary>
 	double ADC_COLLECT_FREQ = ADC_TGT_FREQ;
 	double ADC_FRAME_FREQ = 0;
+	double ADC_CH_COUNT = 6;
 	uint32_t* buf;
 
 public:
@@ -82,7 +83,7 @@ public:
 	/// </summary>
 	/// <param name="card_No">номер платы по порядку запуска </param>
 	/// <param name="ADC_CH_COUNT"> количество используемых каналов ввода</param>
-	LCard(int card_No = 1, int ADC_CH_COUNT = 4, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
+	LCard(int card_No = 1, int ADC_CH_COUNT = 6, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
 	~LCard();
 
 	uint32_t count_ADC_data = 0;

@@ -178,6 +178,7 @@
     <ClInclude Include="LCard.h" />
     <ClInclude Include="piezo_positioners.h" />
     <ClInclude Include="regulator.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="vecters.h" />
     <ClInclude Include="wait_bh.h" />
   </ItemGroup>

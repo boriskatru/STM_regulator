@@ -26,13 +26,13 @@ int main()
     std::cout.precision(4);
 
     Regulator regul;
-    
-    //getchar(); getchar();
+      
     //////////////ПРОВЕРКА СИГНАЛА ПЛАТ///////////////////////
 
     ADC_Collect data = regul.XYCard.AnalogRead(100, ADC_BUF_SIZE_2);
+    cout << "XYCard.data.ch_count" << regul.XYCard.data.ch_count << endl;
     for (int i = 0; i < regul.XYCard.data.ch_count; i++) {
-        cout << "LC ch " << i << " value: " << data.Average(8, i) << endl;
+        cout << "LC ch " << i << " value: " << data.Average(16, i) << endl;
     }
     regul.XYCard.StopReadStream();
     double data1 = regul.ZCard.SingleAnalogRead();
@@ -43,26 +43,81 @@ int main()
     Timer tmr;
     string timestr = get_time_string();
     cout << endl << "Programm started..." << endl;
-    //regul.R_CVg_TransistorCalibration(0.002,0.47,0.65,0.07);                              // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; X4 to amplified C3
-    //regul.Pn_CVg_TransistorCalibration(0.43, 0.66, 0.002);            // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
     //getchar(); getchar();
-    //regul.StepXY(30, -10);
-   // regul.Landing(2, 5, 0.2);
-    //regul.piezo.MoveTo(Vecter(3.0, 1.5, 0), 100, MIN_STEP_SIZE, regul.ZCard, regul.XYCard);
-    //regul.piezo.MoveTo(Vecter(0.0, 0.0, 0),100, MIN_STEP_SIZE,regul.ZCard,regul.XYCard);
+    //regul.R_CVg_TransistorCalibration(0.002, 0.45, 0.6, 0.06, 4.8);            // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; X4 to amplified C3
+    //regul.Pn_CVg_TransistorCalibration(0.44, 0.6, 0.002);            // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
+    //getchar(); getchar();
+    regul.Retract(20, 0.5, 1);
+    //regul.StepXY(0, 1);
+    //regul.TouchScan(0.4, 0.08, 0.08, 0, 0.05, 5, 0, 0.05, 5, 0.15, MIN_STEP_SIZE, 2, 200);
+    //regul.Landing(5, 5, 0.1, 0, MIN_STEP_SIZE);
+   /*for (int count = 1; count <= 2; count++) {   
+      regul.StepXY(-1, 0);
+      regul.TouchScan( 0.08, 0.1, 0, 0.05, 5, 5, -0.05, 0, 0.25, MIN_STEP_SIZE / 2, 2, 100, 0.6);
+      getchar(); getchar();
+    }*/
+   //regul.TouchScan(0.4, 0.08, 0.1, 0, 0.05, 5, 5, -0.05, 0, 0.25, MIN_STEP_SIZE / 2, 2, 100);
+   
+    //regul.Landing(5, 5, 0.15, 0, MIN_STEP_SIZE / 2);
+    //getchar(); getchar();
+   
+    //regul.piezo.MoveTo(Vecter(0.0, 0.0, 2.5), 100, MIN_STEP_SIZE / 20, regul.ZCard, regul.XYCard);
+    //uwait(2000000);
+  
+    //regul.CapStepScan(5, 5000, 0.25, 60, 60, 1, 1, 4);
+
+
+  
+  //сканы с перемещеием по у между ними
+
+  //for (int count = 1; count <= 20; count++) {
+    //regul.piezo.MoveTo(Vecter(0.0, 0.0, 3.5), 100, MIN_STEP_SIZE / 20, regul.ZCard, regul.XYCard);
+     // uwait(2000000);
+      //regul.CapScan(5, 5000, 0.25, 2000, 0, 0.1, 5, 0, 0.1, 5, 3.5);
+       //regul.StepXY(0, 1, true, 5);
+  //}
+
+ 
+    
+    //regul.piezo.MoveTo(Vecter(0.0, 0.0, 1.0),100, MIN_STEP_SIZE/20,regul.ZCard,regul.XYCard);
+    //uwait(2000000);
     //double  height = regul.IntPID_exp(0.5, 0.3, 20 * 1000000, 0,-1);
     //regul.MHome(); 
-    //regul.ConstH_Scan(0.3,0.5,2,0.01,0.01,2e-4,2e-4,1.5e-4,0);
-    //regul.Retract(5,0.3,2);
+    
+    //regul.Retract(5,0.3,1);
+ 
     //getchar(); getchar();
-    //regul.Landing(2, 5, 0.35);
-    //getchar(); getchar();
+    //regul.Landing(1, 4.3, 0.12);
+    //getchar(); getchar();  
     //regul.ZCard.BackstepZ();
     //regul.rise();
-    //regul.ConstH_Scan(0.1, 0.2, 2, 2000, 2000*MIN_STEP_SIZE, 2000*MIN_STEP_SIZE, 5*MIN_STEP_SIZE, 5*MIN_STEP_SIZE, MIN_STEP_SIZE,0,200);
-    //regul.TouchScan(1, 0.15, 0.12, 5, 5, 0.025, 0.025, MIN_STEP_SIZE, 2, 200);
-    //regul.VANC_PID(50, 0.3, 0.2, 240);
-   
+    //regul.ConstH_Scan(0.2, 0.2, 2, 2000, 0*MIN_STEP_SIZE, 20*MIN_STEP_SIZE, 2000*MIN_STEP_SIZE, 0 * MIN_STEP_SIZE, 20 * MIN_STEP_SIZE, 2000 * MIN_STEP_SIZE, MIN_STEP_SIZE,0.05,200);
+    //regul.piezo.MoveTo(Vecter(2.2, 1.0, 0), 100, MIN_STEP_SIZE, regul.ZCard, regul.XYCard);
+    //regul.VANC_PID(50, 0.3, 0.2, 200);
+    //regul.Retract(150, 0.3, 1);
+    // 
+    // 
+    //for (int y_ = 0; y_ < 10; y_++) {
+    //    for (int x_ = 0; x_ < 10; x_++) {
+    //        regul.TouchScan(0.4, 0.05, 0.05, 0, 0.02, 2, 0, 0.02, 2, MIN_STEP_SIZE, 3, 200);
+    //        regul.StepXY(1, 0);
+    //    }
+    //    regul.StepXY(-10, 0,1,5,5,1000000);
+    //    regul.StepXY(0, 1);
+    //}
+    // 
+    // 
+    // for (int count = 0; count < 20; count++) {
+    //    regul.TouchScan(0.4, 0.15, 0.08, 0, 0.05, 5, 0, 0.025, 0.3, MIN_STEP_SIZE, 2, 200);
+    //    //regul.StepXY(1, 0);
+    //}
+
+    /*uwait(1000000 * 300);
+    for (int count = 0; count < 20; count++) {
+        regul.TouchScan(0.4, 0.175, 0.08, 0, 0.05, 5, 0, 0.025, 0.3, MIN_STEP_SIZE, 2, 200);
+        regul.StepXY(-1, 0);
+    }*/
+    //regul.TouchScan(0.4, 0.175, 0.08, 0, 0.05, 5, 0, 0.025, 0.3, MIN_STEP_SIZE, 2, 200);
     return 0;
       
 
@@ -79,7 +134,7 @@ int main()
    //regul.ZStep(FORWARD);
    //regul.Landing(2, 5, 0.25);
    // regul.ZCard.BackstepZ();
-
+    //regul.piezo.MoveTo(Vecter(1.0, 1.0, 0), 100, MIN_STEP_SIZE, regul.ZCard, regul.XYCard);
      
 
  
@@ -92,7 +147,7 @@ int main()
 
 
 
-    //                   КАЛИБРОВКИ                    //
+    //                   КАЛИБРОВКИ                     //
     //////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
     //regul.Pn_CVg_TransistorCalibration(0.35,0.6,0.002);           // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
    

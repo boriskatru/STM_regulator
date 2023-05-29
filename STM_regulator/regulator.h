@@ -18,16 +18,28 @@
 #include "NICard.h"
 
 using namespace std;
-
+#define I_to_nA 10
 #define FORWARD true
 #define BACKWARD false
 ///#define Pc 0.0001
 #define Pc 0.00000003
 //0.000000003 Boris original
 // 0.03 my value ( very stable)
-#define Ic 0.0000005
+#define Ic 0.000002
 #define Dc 0
 #define MIN_STEP_SIZE 0.00015258789 // примерно 0.55 ангстрем в COARSE и 0.035 ангстрем в FINE
+
+#define X_PLANE_TG 0.03
+#define Y_PLANE_TG 0.02
+
+//#define X_FW_BW   0.8586 // (значение Бориса 0.852) отношения шагоа вперёд к шагу назад по оси X на комнате
+//#define X_FW_BW   0.8824
+//#define Y_FW_BW 0.8706
+//#define X_FW_BW   0.8795
+//#define Y_FW_BW   0.80	//0.881  отношения шагоа вперёд к шагу назад по оси Y на комнате
+#define X_FW_BW   0.94
+#define Y_FW_BW   0.52
+
 inline double W_Lambert_approx(double x) {
 	double lnxpp = log(x + 1);
 	return (0.665 * (1 + 0.0195 * lnxpp) * lnxpp + 0.04);
@@ -35,6 +47,9 @@ inline double W_Lambert_approx(double x) {
 inline double CHTransform(double current, double voltage, double offset = 0.005, double c1 = 2, double c2 = 10) {
 	return (W_Lambert_approx(c1 * voltage / max(current, offset)) * c2)* 1.05 * exp(-0.02 / c1 * current);
 }
+//inline double CHTransform(double current, double voltage, double offset = 0.005, double c1 = 2, double c2 = 10) {
+//	return current;
+//}
 inline double LimCatch(double signal, double limit, double max = 25) {
 	if (signal > limit) return signal;
 	else return max;
@@ -75,22 +90,23 @@ inline void make_logs(string folder, string text) {
 	
 	std::filesystem::create_directories(folder + datestr);
 	ofstream file;
-	file.open("../../scans/" + datestr + "/" + "Logs.txt" , std::ios::app);
+	file.open(folder + datestr + "/" + "Logs.txt" , std::ios::app);
 	file << endl << timestr<< ":" << endl << text << endl;;
 	file.close();
 }
 inline double TrBiasStepper( double Vg, bool dir ) {
 	short int sign = 1;
 	if (dir == 0) sign = -1;
-	double offset = 0.0815;
-	double ranges[5][2] = {
-		{ 0.446, 0.1 },
-		{ 0.430, 5*0.012 },
-		{ 0.420, 2*0.006 },
-		{ 0.410, 2*0.00305 },
+	double offset = 0.072;
+	double ranges[6][2] = {
+		{ 0.446, 0.4 },
+		{ 0.432, 0.1 },
+		{ 0.422, 0.03 },
+		{ 0.414, 60* MIN_STEP_SIZE },
+		{ 0.408, 15 * MIN_STEP_SIZE },
 		{ 0.400, 5 * MIN_STEP_SIZE }
 	};
-	for (int i = 0; i < 5; i++ ) {
+	for (int i = 0; i < 6; i++ ) {
 		if (Vg > ranges[i][0] + offset) return (sign * ranges[i][1]);
 	}
 	return 2 * sign * MIN_STEP_SIZE;
@@ -106,9 +122,14 @@ public:
 	double D;
 	double integral;
 	double err ; // невязка
+	double d_err;
 	double last_signal;
 	double tmp;
-	PID(double P = Pc, double I = Ic, double D = Dc);
+	int diff_count;
+	double bias;
+	double r;	
+	double target;//установка
+	PID(double r_ = 0, double bias_ = 0.1, double P_ = Pc, double I_ = Ic, double D_ = Dc);
 	~PID();
 	/// <summary>
 	///	Задаёт начальную позицию регулятора, вычисляя integral
@@ -126,7 +147,15 @@ public:
 	/// <param name="max_step"> максимальный размер шага</param>
 	/// <param name="max_err"></param>
 	/// <returns> контроллирующий сигнал </returns>
-	double signal(double r, double y, double dtime, double d_err = 0, double max_step = 0.05, double max_err = 10);
+	double signal( double y, double dtime,  double max_step = 0.05, double max_err = 10);
+	void reset(double r_, double bias_ = 0.1, double P_ = Pc, double I_ = Ic, double D_ = Dc);
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="folder"></param>
+	void reset_from_file(string folder = "../../");
+	void save_settings(string folder = "../../");
+
  };
 
 class Regulator	
@@ -143,7 +172,8 @@ class Regulator
 	/// <param name="axis">ось</param>
 	/// <param name="dir">направление(назад/вперёд)</param>
 	/// <param name="step_size"> напряжение шага</param>
-	void Step(int axis, int dir, double step_size = 5);
+	/// <param name="step_speed"> скорость шага</param>
+	void Step(int axis, int dir, double step_size = 5, double step_speed = 10);
 	/// <summary>
 	/// Измерение единичной ВАХ(вольт-амперной характеристики)
 	/// </summary>
@@ -169,13 +199,28 @@ class Regulator
 	/// </summary>
 	/// <param name="cnt">количество циклов</param>
 	void ClearTip(int cnt = 25);
-
+	/// <summary>
+	/// Проверка статуса выполнения программы из командного файла (2 - работа, 1 - пауза, 0 - стоп)
+	/// </summary>
+	/// <param name="folder"></param>
+	/// <returns></returns>
+	int GetStatus(string folder = "../../");
+	//void CheckStatus(string message, double& arg = (void*), double bwa = 0.15, string folder = "../../");
+	/// <summary>
+	/// Запись статуса выполнения программы из командного файла (2 - работа, 1 - пауза, 0 - стоп)
+	/// </summary>
+	/// <param name="status"></param>
+	/// <param name="folder"></param>
+	void WriteStatus(int status = 2, string folder = "../../");
+	void ResetPIDFromFile(string folder = "../../");
 public:
 	LCard XYCard;
 	NICard ZCard;
 	PiezoPositioners piezo;
 	PID pid;
-	
+	string folder;
+
+
 	vector<double> buffer = vector<double>(5000, 0);
 	double frequency;		
 	double noise_limit_V;	//шум конвертера
@@ -188,7 +233,7 @@ public:
 	/// <param name="noise_limit_V">порог чуствительности к уму конвертера</param>
 	/// <param name="frequency">частота конвертера</param>
 	/// <param name="bias"></param>
-	Regulator(double i_offset = 0, double noise_limit_V = 0.01, double frequency = 10000, double bias = 0.3);
+	Regulator(double i_offset = 0, double noise_limit_V = 0.01, double frequency = 10000, double bias = 0.3, string folder="../../scans/");
 	~Regulator();
 
 
@@ -198,7 +243,7 @@ public:
 	/// Плавный возврат пьезиков в (0,0,0)
 	/// </summary>
 	/// <param name="step"> размер шага плавной развёртки</param>
-	void MHome(double step = MIN_STEP_SIZE / 4);
+	void MHome(double step = MIN_STEP_SIZE / 20);
 	/// <summary>
 	/// Скачок пьезиков в (0,0,0)
 	/// </summary>
@@ -215,7 +260,7 @@ public:
 	/// <param name="x_steps">Количество шагов по оси X</param>
 	/// <param name="y_steps">Количество шагов по оси Y</param>
 	/// <param name="step_size">размер шага</param>
-	void StepXY(int x_steps, int y_steps, double step_size = 5, string folder = "../../scans/");
+	void StepXY(int x_steps, int y_steps, bool need_logs = true, double step_size = 5, double step_speed = 10, double delay = 5000, string folder = "../../scans/");
 
 	////////////КОНТРОЛИРУЕМОЕ ПЕРЕМЕЩЕНИЕ////////////
 	
@@ -265,7 +310,7 @@ public:
 	/// <param name="duration_us">длительность периода регуляции</param>
 	/// <param name="start_offset"> смещение оси Z в начале скана </param>
 	/// <param name="I_to_nA"> коэффициент конвертации сигнала напряжения в ток </param>
-	double IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_pos = 0, int polarity = 1, double I_to_nA = 10, double touch_lim = -0.0015, string folder = "../../scans/");
+	double IntPID_exp(double bias_ = 1, double target_V = 0.25, double duration_us = 0, double start_pos = 0, int polarity = 1,  double touch_lim = -0.0015, int update_delay = 50000, string folder = "../../scans/");
 	/// <summary>
 	/// регуляция на основе внешнего ПИД с подъёмом между шагами:
 	/// </summary>
@@ -292,31 +337,60 @@ public:
 	
 
 	/// <summary>
-	///  Сканирование касанием с подъёмом
+	/// Сканирование больших площадей по ёмкостному сигналу 
 	/// </summary>
 	/// <param name="bias_">напряжение на игле, В</param>
+	/// <param name="freq">частота баяса</param>
+	/// <param name="crit_V">напряжение детектирования касания</param>
+	/// <param name="x_steps">количество точек по оси X</param>
+	/// <param name="y_steps">количество точек по оси Y</param>
+	/// <param name="X_step_sz">размер шага точек по оси X (в шагах пьезоподвижек)</param>
+	/// <param name="Y_step_sz">размер шага точек по оси Y (в шагах пьезоподвижек)</param>
+	/// <param name="step_V">напряжение шага пьезоподвижек</param>
+	/// <param name="I_to_nA"></param>
+	/// <param name="folder"></param>
+	void CapStepScan(double bias_ = 5, double freq = 5000, double crit_V = 0.25, int x_steps = 50, int y_steps = 50, int X_step_sz = 4, int Y_step_sz = 4, double step_V = 5.0, string folder = "../../scans/");
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="bias_"></param>
+	/// <param name="freq"></param>
+	/// <param name="crit_V"></param>
+	/// <param name="point_delay"></param>
+	/// <param name="x_start"></param>
+	/// <param name="x_step"></param>
+	/// <param name="x_stop"></param>
+	/// <param name="y_start"></param>
+	/// <param name="y_step"></param>
+	/// <param name="y_stop"></param>
+	/// <param name="Z_height"></param>
+	/// <param name="djump"></param>
+	/// <param name="folder"></param>
+	void CapScan(double bias_ = 5, double freq = 5000, double crit_V = 0.25, double point_delay = 2000, double x_start = 0, double x_step = 120 * MIN_STEP_SIZE, double x_stop = 15000 * MIN_STEP_SIZE,
+		double y_start = 0, double y_step = 120 * MIN_STEP_SIZE, double y_stop = 15000 * MIN_STEP_SIZE, double Z_height = 0, double djump = MIN_STEP_SIZE, string folder = "../../scans/");
+	// старая строка
+	// void CapStepScan(double bias_ = 5, double freq = 5000, double crit_V = 5, int x_steps = 50, int y_steps = 50, int step_sz = 4, int I_to_nA = 10, string folder = "../../scans/");
+	
+	/// <summary>
+	/// Сканирование касанием с подъёмом
+	/// </summary>	
 	/// <param name="bwa"> размах отскока назад при касании</param>
 	/// <param name="crit_V">напряжение детектирования касания</param>
-	/// <param name="x_dim">размер скана по оси X</param>
-	/// <param name="y_dim">размер скана по оси Y</param>
+	/// <param name="x_start"></param>
 	/// <param name="x_step">шаг по оси X</param>
+	/// <param name="x_stop">размер скана по оси X</param>
+	/// <param name="y_start"></param>
 	/// <param name="y_step">шаг по оси Y</param>
+	/// <param name="y_stop">размер скана по оси Y</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <param name="up_mult"> дистанция остановки от поверхности при первичном подъёме (в единицах bwa) </param>
 	/// <param name="pre_wait"> время ожидания после подъёма перед сканом (для релаксации пьезиков) </param>
-	void TouchScan(double bias_ = 0.6, double bwa = 0.15, double crit_V = 0.25, double x_dim = 15000 * MIN_STEP_SIZE, double y_dim = 15000 * MIN_STEP_SIZE,
-		double x_step = 120 * MIN_STEP_SIZE, double y_step = 120 * MIN_STEP_SIZE, double djump = MIN_STEP_SIZE, int up_mult = 3, int pre_wait = 300, string folder = "../../scans/");
-
-	/// <summary>
-	///  Сканирование касанием с подъёмом
-	/// </summary>
 	/// <param name="bias_">напряжение на игле, В</param>
-	/// <param name="target_V">напряжение детектирования касания</param>
-	/// <param name="x_dim">размер скана по оси X</param>
-	/// <param name="y_dim">размер скана по оси Y</param>
-	/// <param name="x_step">шаг по оси X</param>
-	/// <param name="y_step">шаг по оси Y</param>
-	/// <param name="djump">размер шага плавной развёртки</param>
+	void TouchScan( double bwa = 0.15, double crit_V = 0.25, double x_start = 0, double x_step = 120 * MIN_STEP_SIZE, double x_stop = 15000 * MIN_STEP_SIZE,
+		double y_start = 0, double y_step = 120 * MIN_STEP_SIZE, double y_stop = 15000 * MIN_STEP_SIZE, double h_diff_lim = 5, double djump = MIN_STEP_SIZE, int up_mult = 3, int pre_wait = 300, double bias_ = 0.6, string folder = "../../scans/");
+
+
 	
 
 	/// <summary>
@@ -326,16 +400,18 @@ public:
 	/// <param name="target_V"> напряжение детектирования касания</param>
 	/// <param name="pid_delay"> время на поддержание уставки между строками, секунд</param>
 	/// <param name="point_delay"> время на точку, микросекунд</param>
-	/// <param name="x_dim">размер скана по оси X</param>
-	/// <param name="y_dim">размер скана по оси Y</param>
+	/// <param name="x_start"></param>
 	/// <param name="x_step">шаг по оси X</param>
+	/// <param name="x_stop">размер скана по оси X</param>	
+	/// <param name="y_start"></param>
 	/// <param name="y_step">шаг по оси Y</param>
+	/// <param name="y_stop">размер скана по оси Y</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <param name="bwa"> высота отскока перемещения</param>
 	/// <param name="pre_wait"> выдержка перед сканом, секунд</param>
 	/// <param name="folder"></param>
-	void ConstH_Scan(double bias_ = 0.5, double target_V = 0.2, double pid_delay = 2, double point_delay = 2000, double x_dim = 400 * MIN_STEP_SIZE, double y_dim = 400 * MIN_STEP_SIZE,
-		double x_step = 1 * MIN_STEP_SIZE, double y_step = 1 * MIN_STEP_SIZE, double djump = MIN_STEP_SIZE, double bwa = 0.25, int pre_wait = 200, string folder = "../../scans/");
+	void ConstH_Scan(double bias_ = 0.5, double target_V = 0.2, double pid_delay = 2, double point_delay = 2000, double x_start = 0, double x_step = 1 * MIN_STEP_SIZE, double x_stop = 400 * MIN_STEP_SIZE, 
+							double y_start = 0, double y_step = 1 * MIN_STEP_SIZE, double y_stop = 400 * MIN_STEP_SIZE, double djump = MIN_STEP_SIZE, double bwa = 0.25, int pre_wait = 200, string folder = "../../scans/");
 
 	/// <summary>
 	/// Скан со сканированием VAC в каждой точке
