@@ -135,7 +135,7 @@ LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZ
 	//			cout << "Îøèáêà â L502_SetLChannel()" << error << endl;
 	//	}
 	//}
-	error = L502_SetLChannel(hnd, 0, 0, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	error = L502_SetLChannel(hnd, 0, 0, L502_LCH_MODE_COMM, L502_ADC_RANGE_05, 0);
 	if (error)
 		cout << "Îøèáêà â L502_SetLChannel()" << error << endl;
 	error = L502_SetLChannel(hnd, 1, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);

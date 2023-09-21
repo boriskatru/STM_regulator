@@ -7,7 +7,7 @@
 #include <vector>
 #include <l502api.h>
 #include <filesystem>
-
+#include <cstdarg>
 
 #include "piezo_positioners.h"
 #include "LCard.h"
@@ -25,7 +25,7 @@ using namespace std;
 #define Pc 0.00000003
 //0.000000003 Boris original
 // 0.03 my value ( very stable)
-#define Ic 0.000002
+#define Ic 0.000001
 #define Dc 0
 #define MIN_STEP_SIZE 0.00015258789 // примерно 0.55 ангстрем в COARSE и 0.035 ангстрем в FINE
 
@@ -37,8 +37,8 @@ using namespace std;
 //#define Y_FW_BW 0.8706
 //#define X_FW_BW   0.8795
 //#define Y_FW_BW   0.80	//0.881  отношения шагоа вперёд к шагу назад по оси Y на комнате
-#define X_FW_BW   0.94
-#define Y_FW_BW   0.52
+#define X_FW_BW   1.058
+#define Y_FW_BW   0.99
 
 inline double W_Lambert_approx(double x) {
 	double lnxpp = log(x + 1);
@@ -102,9 +102,9 @@ inline double TrBiasStepper( double Vg, bool dir ) {
 		{ 0.446, 0.4 },
 		{ 0.432, 0.1 },
 		{ 0.422, 0.03 },
-		{ 0.414, 60* MIN_STEP_SIZE },
-		{ 0.408, 15 * MIN_STEP_SIZE },
-		{ 0.400, 5 * MIN_STEP_SIZE }
+		{ 0.414, 48 * MIN_STEP_SIZE },
+		{ 0.408, 12 * MIN_STEP_SIZE },
+		{ 0.400, 4 * MIN_STEP_SIZE }
 	};
 	for (int i = 0; i < 6; i++ ) {
 		if (Vg > ranges[i][0] + offset) return (sign * ranges[i][1]);
@@ -113,6 +113,8 @@ inline double TrBiasStepper( double Vg, bool dir ) {
 	
 	
 }	
+ 
+
 
 class PID {
 	
@@ -205,6 +207,11 @@ class Regulator
 	/// <param name="folder"></param>
 	/// <returns></returns>
 	int GetStatus(string folder = "../../");
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="folder"></param>
+	void CheckStatus(string folder = "../../");
 	//void CheckStatus(string message, double& arg = (void*), double bwa = 0.15, string folder = "../../");
 	/// <summary>
 	/// Запись статуса выполнения программы из командного файла (2 - работа, 1 - пауза, 0 - стоп)
@@ -212,7 +219,18 @@ class Regulator
 	/// <param name="status"></param>
 	/// <param name="folder"></param>
 	void WriteStatus(int status = 2, string folder = "../../");
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="folder"></param>
 	void ResetPIDFromFile(string folder = "../../");
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="folder"></param>
+	void LoadParamsFromFile(string folder, string name, int count , double**arr);
+	void SaveParamsToFile(string folder, string name, int count, ...);
+
 public:
 	LCard XYCard;
 	NICard ZCard;
@@ -243,7 +261,11 @@ public:
 	/// Плавный возврат пьезиков в (0,0,0)
 	/// </summary>
 	/// <param name="step"> размер шага плавной развёртки</param>
-	void MHome(double step = MIN_STEP_SIZE / 20);
+	void MHome(double step = MIN_STEP_SIZE / 20);	/// <summary>
+	/// Плавный возврат пьезиков в (0,0,0)
+	/// </summary>
+	/// <param name="step"> размер шага плавной развёртки</param>
+	void ZHome(double step = MIN_STEP_SIZE / 20);
 	/// <summary>
 	/// Скачок пьезиков в (0,0,0)
 	/// </summary>
@@ -268,9 +290,9 @@ public:
 	/// Отвод иглы
 	/// </summary>
 	/// <param name="steps">Количество шагов ретракта</param>
-	/// <param name="step_incr"> инкремент увеличения шага (в случае касания)</param>
-	/// <param name="rpt">повторов шага между его увеличением</param>
-	void Retract(int steps = 1, double step_incr = 0.4, double rpt = 2, string folder = "../../scans/");
+	/// <param name="touch_v">Напряжение детектирования касания</param>
+	/// <param name="step_incr"> инкремент увеличения шага (в случае касания)</param
+	void Retract(int steps = 1, double touch_v= 0.05, double step_incr = 0.4, string folder = "../../scans/");
 	/// <summary>
 	/// Предподъём иглы к обазцу
 	/// </summary>
@@ -289,7 +311,7 @@ public:
 	/// <param name="delay_micro">задержка в мкс</param>
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns> высота касания в В</returns>
-	double Landing(double bias_ = 2, double range = 5, double target_V = 0.15, double delay_micro = 0, double djump = 2*MIN_STEP_SIZE, string folder = "../../scans/");
+	double Landing(double bias_ = 2, double range = 5, double target_V = 0.15, double delay_micro = 0, double step_speed = 2, string folder = "../../scans/");
 
 	////////////PID РЕГУЛЯТОРЫ////////////
 
@@ -387,8 +409,8 @@ public:
 	/// <param name="up_mult"> дистанция остановки от поверхности при первичном подъёме (в единицах bwa) </param>
 	/// <param name="pre_wait"> время ожидания после подъёма перед сканом (для релаксации пьезиков) </param>
 	/// <param name="bias_">напряжение на игле, В</param>
-	void TouchScan( double bwa = 0.15, double crit_V = 0.25, double x_start = 0, double x_step = 120 * MIN_STEP_SIZE, double x_stop = 15000 * MIN_STEP_SIZE,
-		double y_start = 0, double y_step = 120 * MIN_STEP_SIZE, double y_stop = 15000 * MIN_STEP_SIZE, double h_diff_lim = 5, double djump = MIN_STEP_SIZE, int up_mult = 3, int pre_wait = 300, double bias_ = 0.6, string folder = "../../scans/");
+	void TouchScan(double bias_ = 0.6, double bwa = 0.15, double crit_V = 0.25, double x_start = 0, double x_step = 120 * MIN_STEP_SIZE, double x_stop = 15000 * MIN_STEP_SIZE,
+		double y_start = 0, double y_step = 120 * MIN_STEP_SIZE, double y_stop = 15000 * MIN_STEP_SIZE, double h_diff_lim = 5, double djump = MIN_STEP_SIZE, double up_mult = 3, double pre_wait = 300, string folder = "../../scans/");
 
 
 	
@@ -410,7 +432,7 @@ public:
 	/// <param name="bwa"> высота отскока перемещения</param>
 	/// <param name="pre_wait"> выдержка перед сканом, секунд</param>
 	/// <param name="folder"></param>
-	void ConstH_Scan(double bias_ = 0.5, double target_V = 0.2, double pid_delay = 2, double point_delay = 2000, double x_start = 0, double x_step = 1 * MIN_STEP_SIZE, double x_stop = 400 * MIN_STEP_SIZE, 
+	void ConstHScan(double bias_ = 0.5, double target_V = 0.2, double pid_delay = 2, double point_delay = 2000, double x_start = 0, double x_step = 1 * MIN_STEP_SIZE, double x_stop = 400 * MIN_STEP_SIZE, 
 							double y_start = 0, double y_step = 1 * MIN_STEP_SIZE, double y_stop = 400 * MIN_STEP_SIZE, double djump = MIN_STEP_SIZE, double bwa = 0.25, int pre_wait = 200, string folder = "../../scans/");
 
 	/// <summary>
