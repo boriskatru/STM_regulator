@@ -102,17 +102,26 @@ Regulator::Regulator(double i_offset, double noise_limit_V, double frequency , d
 }
 Regulator::~Regulator() {
 	MHome();
-	ZCard.~NICard(); 
 	XYCard.FullStop();
-	XYCard.~LCard();
 	piezo.~PiezoPositioners();
+	ZCard.~NICard(); 
+	XYCard.~LCard();
+
 }
 
 
 /////////
 
-void Regulator::MoveTo(double step)
+void Regulator::MoveTo(double x_, double y_, double step_size)
 {
+	WriteStatus(2);
+	//const int param_num = 3;
+	//double* tmp[param_num] = {&x_, &y_, &step_size};  ALL TO DOUBLE!!!!!!!!!!!!!!!!!!!!!!	
+	//LoadParamsFromFile("../../Settings/", "TouchScan.txt", param_num, tmp);
+	//SaveParamsToFile("../../Settings/", "StepXY.txt", 6, (double)x_, (double)y_, (double)step_size);
+	//return;
+	piezo.MoveTo(Vecter(x_, y_, piezo.Position()), 100, step_size, ZCard, XYCard);
+	WriteStatus(0);
 }
 
 void Regulator::MHome(double step) {
@@ -145,7 +154,6 @@ bool Regulator::CheckStatus(string stop_message, string folder) {
 	}
 	if (GetStatus() == 0) {
 		MHome();
-		std::cout << stop_message << endl;
 		make_logs(folder, stop_message);
 		return 1;
 	}
@@ -240,7 +248,6 @@ void Regulator::StepXY(int x_steps, int y_steps, bool need_logs, double step_siz
 			if (CheckStatus("Steps stopped by user. "+ to_string(i)+" X steps done")) return;
 		}
 		else { 
-			cout << "AHTUNG!!!  OBSTACLE!!! STEPS STOPPED!!!" << endl;
 			make_logs(folder, "AHTUNG!!!OBSTACLE!!!STEPS STOPPED!!!");
 			return; 
 		}
@@ -252,7 +259,6 @@ void Regulator::StepXY(int x_steps, int y_steps, bool need_logs, double step_siz
 			if (CheckStatus("Steps stopped by user. " + to_string(x_steps) + " X steps and" + to_string(i) + " Y steps done")) return;
 		}
 		else {
-			cout << "AHTUNG!!!  OBSTACLE!!! STEPS STOPPED!!!" << endl;
 			make_logs(folder, "AHTUNG!!!OBSTACLE!!!STEPS STOPPED!!!");
 			return;
 		}
@@ -263,7 +269,7 @@ void Regulator::StepXY(int x_steps, int y_steps, bool need_logs, double step_siz
 		if (y_steps != 0) log += "\n Y steps done: " + to_string(y_steps);
 		make_logs(folder, log);
 	}
-	
+	WriteStatus(0);
 }
 
 /////////
@@ -329,7 +335,6 @@ double Regulator::rise(double bias_, double bwa, double target_V, double djump, 
 	ZHome();
 	ZCard.StopReadStream();
 	//uwait(1000000);
-	cout << "Height: " << last_height << endl;
 	make_logs(folder, " Check rise | Touch height: " + to_string(last_height));
 	return last_height;
 }
@@ -462,7 +467,6 @@ double Regulator::IntPID_exp(double bias_, double target_V, double duration_us, 
 					while (GetStatus() < 2) {
 						if (GetStatus() == 0) {
 							ZHome();
-							std::cout << "VANC measurements stopped by user" << endl;
 							make_logs(folder, "VANC measurements stopped by user ");
 							return 0;
 						}
@@ -491,7 +495,6 @@ double Regulator::IntPID_exp(double bias_, double target_V, double duration_us, 
 					while (GetStatus() < 2) {
 						if (GetStatus() == 0) {
 							ZHome();
-							std::cout << "VANC measurements stopped by user" << endl;
 							make_logs(folder, "VANC measurements stopped by user ");
 							return 0;
 						}
@@ -522,7 +525,6 @@ void Regulator::VANC_PID(int count, double target_V, double bias_,  double pre_w
 	ADC_Collect data = XYCard.AnalogRead(100, ADC_BUF_SIZE_2);
 	Timer tmr;
 	string timestr = get_time_string();
-	std::cout << "ANC measurements with PID started: " << endl;
 	make_logs(folder, "VANC measurements with PID started \nParameters: \n	Bias: " + to_string(bias_) + "\n	Target_V: " + to_string(target_V) + "\n	Count: " + to_string(count) + "\n	Delay: " + to_string(delay));
 	
 	pid.reset(target_V, bias);
@@ -545,8 +547,7 @@ void Regulator::VANC_PID(int count, double target_V, double bias_,  double pre_w
 			height = height - 0.15;
 			while (GetStatus() < 2) {
 				if (GetStatus() == 0) {
-					ZHome();
-					std::cout << "VANC measurements stopped by user" << endl;
+					ZHome();					
 					make_logs(folder, "VANC measurements stopped by user ");
 					return;
 				}
@@ -555,8 +556,7 @@ void Regulator::VANC_PID(int count, double target_V, double bias_,  double pre_w
 		}
 
 	}
-	ZHome();
-	std::cout << "VANC measurements done !" << endl;
+	ZHome();	
 	make_logs(folder, "VANC measurements done ");
 	WriteStatus(0);
 }
@@ -645,8 +645,7 @@ void Regulator::CapStepScan(double bias_, double freq, double crit_V, int x_step
 			scan_fw.HFWplot[y][x] = piezo.Position();
 			scan_fw.CFWplot[y][x] = ZCard.SingleAnalogRead();
 			if (scan_fw.CFWplot[y][x] > crit_V) {
-				StepXY(-X_step_sz, -Y_step_sz, false, step_V);
-				cout << "!!!WARNING!!!" << endl << "Obstacle detected!" << endl;
+				StepXY(-X_step_sz, -Y_step_sz, false, step_V);				
 				make_logs(folder, "!!!WARNING!!!  Obstacle detected! Capasitance step scan stopped" );
 				return;
 			}
@@ -669,11 +668,10 @@ void Regulator::CapStepScan(double bias_, double freq, double crit_V, int x_step
 	
 	StepXY(0, -Y_step_sz * ((Y_step_sz >= 0) ? Y_FW_BW : 1 / Y_FW_BW) * y_steps, false, step_V); // если закоментированно, то не возвращается по Y!!
 	ZCard.StopReadStream();
-	//scan.SaveFiles();
-	std::cout << "Scanning done!" << endl;
+	//scan.SaveFiles();	
 	make_logs(folder, "Capasitance step scan done ");
-	WriteStatus(0);
 	MHome();
+	WriteStatus(0);
 	//getchar(); getchar();
 }
 void Regulator::CapScan(double bias_, double freq, double crit_V, double point_delay, double x_start, double x_step, double x_stop, double y_start, double y_step, double y_stop, double Z_height, double djump, string folder)
@@ -717,7 +715,6 @@ void Regulator::CapScan(double bias_, double freq, double crit_V, double point_d
 			is_touch = (ZCard.SingleAnalogRead() > crit_V);
 			if (is_touch) {
 				MHome();
-				cout << "!!!WARNING!!!" << endl << "Obstacle detected!" << endl;
 				make_logs(folder, "!!!WARNING!!!  Obstacle detected! Capasitance scan stopped");
 				return;
 			}
@@ -732,7 +729,6 @@ void Regulator::CapScan(double bias_, double freq, double crit_V, double point_d
 			is_touch = (ZCard.SingleAnalogRead() > crit_V);
 			if (is_touch) {
 				MHome();
-				cout << "!!!WARNING!!!" << endl << "Obstacle detected!" << endl;
 				make_logs(folder, "!!!WARNING!!!  Obstacle detected! Capasitance scan stopped");
 				return;
 			}
@@ -751,8 +747,7 @@ void Regulator::CapScan(double bias_, double freq, double crit_V, double point_d
 	}
 	
 	MHome();
-	ZCard.StopReadStream();	
-	std::cout << "Scanning done!" << endl;
+	ZCard.StopReadStream();
 	make_logs(folder, "Capasitance scan done ");
 	WriteStatus(0);
 }
@@ -904,10 +899,8 @@ void Regulator::TouchScan(double bias_, double bwa, double crit_V, double x_star
 	MHome();
 	ZCard.StopReadStream();
 	//scan.SaveFiles();
-	std::cout << "Scanning done!" << endl;
 	make_logs(folder, "Touch scan done ");
 	WriteStatus(0);
-	//getchar(); getchar();
 }
 void Regulator::ConstHScan(double bias_, double target_V, double pid_delay, double point_delay, double x_start, double x_step, double x_stop,
 								double y_start, double y_step, double y_stop, double djump, double bwa, int pre_wait, string folder)
@@ -979,24 +972,22 @@ void Regulator::ConstHScan(double bias_, double target_V, double pid_delay, doub
 	piezo.Move(Vecter(0, 0, -bwa), 0, djump / 4, ZCard, XYCard);
 	MHome();
 	ZCard.StopReadStream();
-	//scan.SaveFiles();
-	std::cout << "Scanning done!" << endl;
+	//scan.SaveFiles();	
 	make_logs(folder, "Constant height scan done ");
 	WriteStatus(0);
-	//getchar(); getchar();
 }
 void Regulator::VAC_scan() {}
 
 /////////
 
 void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , double incr, int delay, string folder) {
+	WriteStatus(2);
 	//const int param_num = 8;
 	//double* tmp[param_num] = {&bias_, &freq, &crit_V, &x_steps, &y_steps, &X_step_sz, &Y_step_sz, &step_V};  ALL TO DOUBLE!!!!!!!!!!!!!!!!!!!!!!	
 	//LoadParamsFromFile("../../Settings/", "TouchScan.txt", param_num, tmp);
 	//SaveParamsToFile("../../Settings/", "Pn_CVg_TransistorCalibration.txt", 4, Vg_min, Vg_max, incr, (double)delay);
 	//return;
 	make_logs(folder, "Pn_CVg_TransistorCalibration started\nTime per point: " + to_string((float)ADC_BUF_SIZE_2 / ADC_TGT_FREQ) + " s");
-	std::cout << endl << "Pn_CVg_TransistorCalibration started..." << endl;
 	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2000, ADC_BUF_SIZE_2);
 	int point_num = (Vg_max - Vg_min) / incr;
 	double dispersion = 0;
@@ -1052,10 +1043,11 @@ void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , dou
 	}
 	std::cout << "data printed in file Noise_B.dat " << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
-	std::cout << endl << "Calibration completed!" << endl;
 	make_logs(folder, "Pn_CVg_TransistorCalibration completed");
+	WriteStatus(0);
 }
 void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double Vg_max, double Vsd_crit, double Vbias_crit, int delay_us, string folder) {
+	WriteStatus(2);
 	//const int param_num = 8;
 	//double* tmp[param_num] = {&bias_, &freq, &crit_V, &x_steps, &y_steps, &X_step_sz, &Y_step_sz, &step_V};  ALL TO DOUBLE!!!!!!!!!!!!!!!!!!!!!!	
 	//LoadParamsFromFile("../../Settings/", "TouchScan.txt", param_num, tmp);
@@ -1124,8 +1116,8 @@ void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double V
 	}
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0, Z_OUT_FINE);
-	std::cout << endl << "Calibration completed!" << endl;
 	make_logs(folder, "R_CVg_TransistorCalibration completed");
+	WriteStatus(0);
 }
 
 

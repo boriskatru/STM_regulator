@@ -32,7 +32,6 @@ Operation LoadOpeartion(string path = "../../Settings/CurrentOperation.txt") {
 int main()
 {
     setlocale(LC_ALL, "Russian");
-
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     SetThreadPriority(GetCurrentProcess(), THREAD_PRIORITY_TIME_CRITICAL);
     cout << GetPriorityClass(GetCurrentProcess()) << endl;
@@ -91,6 +90,7 @@ int main()
                 regul.R_CVg_TransistorCalibration();
                 break;
             case Operation::Waiting:
+                //cout << endl << "Waiting..." << endl;
                 break;
             case Operation::Exit:
                 cout << endl << "Programm finished..." << endl;

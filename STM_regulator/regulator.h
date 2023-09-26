@@ -72,6 +72,7 @@ inline string get_time_string() {
 }
 
 inline void make_logs(string folder, string text) {
+	std::cout << endl << text << endl;
 	string datestr = "";
 	string timestr = "";
 
@@ -259,8 +260,10 @@ public:
 	/// <summary>
 	/// Плавное перемещение пьезиков 
 	/// </summary>
-	/// <param name="step"> размер шага плавной развёртки</param>
-	void MoveTo(double step = MIN_STEP_SIZE / 20);	/// <summary>
+	/// <param name="x_"> координата назначения по оси X</param>
+	/// <param name="y_"> координата назначения по оси Y</param>
+	/// <param name="step_size"> размер шага плавной развёртки</param>
+	void MoveTo(double x_ = 0, double y_ = 0, double step_size = MIN_STEP_SIZE / 20);	/// <summary>
 	/// <summary>
 	/// Плавный возврат пьезиков в (0,0,0)
 	/// </summary>
