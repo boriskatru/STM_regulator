@@ -206,24 +206,24 @@ class Regulator
 	/// </summary>
 	/// <param name="folder"></param>
 	/// <returns></returns>
-	int GetStatus(string folder = "../../");
+	int GetStatus(string folder = "../../Settings/");
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="folder"></param>
-	void CheckStatus(string folder = "../../");
+	bool CheckStatus(string stop_message, string folder = "../../Settings/");
 	//void CheckStatus(string message, double& arg = (void*), double bwa = 0.15, string folder = "../../");
 	/// <summary>
 	/// Запись статуса выполнения программы из командного файла (2 - работа, 1 - пауза, 0 - стоп)
 	/// </summary>
 	/// <param name="status"></param>
 	/// <param name="folder"></param>
-	void WriteStatus(int status = 2, string folder = "../../");
+	void WriteStatus(int status = 2, string folder = "../../Settings/");
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="folder"></param>
-	void ResetPIDFromFile(string folder = "../../");
+	void ResetPIDFromFile(string folder = "../../Settings/");
 	/// <summary>
 	/// 
 	/// </summary>
@@ -256,7 +256,11 @@ public:
 
 
 	////////////ПЕРЕМЕЩЕНИЕ////////////
-
+	/// <summary>
+	/// Плавное перемещение пьезиков 
+	/// </summary>
+	/// <param name="step"> размер шага плавной развёртки</param>
+	void MoveTo(double step = MIN_STEP_SIZE / 20);	/// <summary>
 	/// <summary>
 	/// Плавный возврат пьезиков в (0,0,0)
 	/// </summary>
@@ -282,7 +286,7 @@ public:
 	/// <param name="x_steps">Количество шагов по оси X</param>
 	/// <param name="y_steps">Количество шагов по оси Y</param>
 	/// <param name="step_size">размер шага</param>
-	void StepXY(int x_steps, int y_steps, bool need_logs = true, double step_size = 5, double step_speed = 10, double delay = 5000, string folder = "../../scans/");
+	void StepXY(int x_steps=0, int y_steps=0, bool need_logs = true, double step_size = 5, double step_speed = 10, double delay = 5000, string folder = "../../scans/");
 
 	////////////КОНТРОЛИРУЕМОЕ ПЕРЕМЕЩЕНИЕ////////////
 	
@@ -355,7 +359,7 @@ public:
 	/// <param name="delay"> задержка между считываниями, с (должна быть больше чем период сбора)</param>
 	/// <param name="pre_wait"> время подвода и входа в режим перед измерениями, секунд</param>
 	/// <param name="folder"></param>
-	void VANC_PID(int count, double target_V = 0.2, double bias_ = 0.2, double pre_wait = 200, double delay = 1 + ADC_BUF_SIZE_2 / 2000000, string folder = "../../scans/");
+	void VANC_PID(int count=1, double target_V = 0.2, double bias_ = 0.2, double pre_wait = 200, double delay = 1 + ADC_BUF_SIZE_2 / 2000000, string folder = "../../scans/");
 	
 
 	/// <summary>

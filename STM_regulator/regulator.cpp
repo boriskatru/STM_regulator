@@ -111,6 +111,10 @@ Regulator::~Regulator() {
 
 /////////
 
+void Regulator::MoveTo(double step)
+{
+}
+
 void Regulator::MHome(double step) {
 	piezo.MoveTo(Vecter(0, 0, 0), 0, step, ZCard, XYCard);
 }
@@ -135,14 +139,17 @@ int Regulator::GetStatus(string folder)
 	file.close();
 	return status;
 }
-void Regulator::CheckStatus(string folder){
-	int status = GetStatus();
-	if (status == 1) {
-		while (GetStatus() == 1) {
-			uwait(100000);
-		}
+bool Regulator::CheckStatus(string stop_message, string folder) {	
+	while (GetStatus() == 1) {
+		uwait(100000);
 	}
-	if (status == 0) exit(0);
+	if (GetStatus() == 0) {
+		MHome();
+		std::cout << stop_message << endl;
+		make_logs(folder, stop_message);
+		return 1;
+	}
+	else return 0;
 }
 //void Regulator::CheckStatus(string message, double& arg,double bwa,  string folder)
 //{
@@ -230,7 +237,7 @@ void Regulator::StepXY(int x_steps, int y_steps, bool need_logs, double step_siz
 		if (abs(ZCard.SingleAnalogRead()) < 0.5) {
 			Step(X_, x_steps, step_size, step_speed);
 			uwait(delay);
-			CheckStatus();
+			if (CheckStatus("Steps stopped by user. "+ to_string(i)+" X steps done")) return;
 		}
 		else { 
 			cout << "AHTUNG!!!  OBSTACLE!!! STEPS STOPPED!!!" << endl;
@@ -242,7 +249,7 @@ void Regulator::StepXY(int x_steps, int y_steps, bool need_logs, double step_siz
 		if (abs(ZCard.SingleAnalogRead()) < 0.5) {
 			Step(Y_, y_steps, step_size, step_speed);
 			uwait(delay);
-			CheckStatus();
+			if (CheckStatus("Steps stopped by user. " + to_string(x_steps) + " X steps and" + to_string(i) + " Y steps done")) return;
 		}
 		else {
 			cout << "AHTUNG!!!  OBSTACLE!!! STEPS STOPPED!!!" << endl;
@@ -362,13 +369,7 @@ double Regulator::Landing(double bias_, double range, double target_V, double de
 			//uwait(delay_micro);
 			stp_count++;
 			piezo.ZJumpTo(0, ZCard);
-			int status = GetStatus() ;
-			if (status == 1) {
-				while (GetStatus() == 1) {
-					uwait(100000);
-				}
-			}
-			if (status == 0) exit(0);
+			if (CheckStatus("Landing stopped by user")) return 0;
 			
 			for (int i = 0; i < 10; i++) {
 				uwait(1000);
@@ -463,7 +464,7 @@ double Regulator::IntPID_exp(double bias_, double target_V, double duration_us, 
 							ZHome();
 							std::cout << "VANC measurements stopped by user" << endl;
 							make_logs(folder, "VANC measurements stopped by user ");
-							exit(0);
+							return 0;
 						}
 						uwait(100000);
 					}
@@ -492,7 +493,7 @@ double Regulator::IntPID_exp(double bias_, double target_V, double duration_us, 
 							ZHome();
 							std::cout << "VANC measurements stopped by user" << endl;
 							make_logs(folder, "VANC measurements stopped by user ");
-							exit(0);
+							return 0;
 						}
 						uwait(100000);
 					}
@@ -547,7 +548,7 @@ void Regulator::VANC_PID(int count, double target_V, double bias_,  double pre_w
 					ZHome();
 					std::cout << "VANC measurements stopped by user" << endl;
 					make_logs(folder, "VANC measurements stopped by user ");
-					exit(0);
+					return;
 				}
 				uwait(100000);
 			}
@@ -650,14 +651,7 @@ void Regulator::CapStepScan(double bias_, double freq, double crit_V, int x_step
 				return;
 			}
 			StepXY(X_step_sz, 0, false, step_V);
-			while (GetStatus() < 2) {
-				if (GetStatus() == 0) {
-					MHome();
-					std::cout << "Capasitance step scan stopped by user" << endl;
-					make_logs(folder, "Capasitance step scan stopped by user ");
-					exit(0);
-				}
-			}
+			if (CheckStatus("Capasitance step scan stopped by user")) return;
 		}
 		
 		/*задний ход:*/	
@@ -752,15 +746,7 @@ void Regulator::CapScan(double bias_, double freq, double crit_V, double point_d
 		scan.SaveRow(y);
 		if (GetStatus() < 2) {
 			piezo.Move(Vecter(0, 0, -0.3), 100, djump / 4, ZCard, XYCard);
-			while (GetStatus() < 2) {
-				if (GetStatus() == 0) {
-					MHome();
-					std::cout << "Scanning stopped by user" << endl;
-					make_logs(folder, "Scanning stopped by user ");
-					exit(0);
-				}
-				uwait(100000);
-			}
+			if (CheckStatus("Capasitance scan stopped by user")) return;
 		}
 	}
 	
@@ -808,14 +794,8 @@ void Regulator::TouchScan(double bias_, double bwa, double crit_V, double x_star
 		if (piezo.Position() < 2 * bwa) is_touch = 0;
 		for (int i = 0; i < 10; i++)  ZCard.SingleAnalogRead();
 		ZCard.SingleAnalogRead();
-		while (GetStatus() < 2) {
-			if (GetStatus() == 0) {
-				MHome();
-				std::cout << "VANC measurements stopped by user" << endl;
-				make_logs(folder, "VANC measurements stopped by user ");
-				exit(0);
-			}
-		}
+		if (CheckStatus("Touch scan stopped by user")) return;
+
 	}
 	
 	while (is_touch) {
@@ -830,15 +810,7 @@ void Regulator::TouchScan(double bias_, double bwa, double crit_V, double x_star
 
 	
 	for (int i = 0; i < pre_wait; i++) {		
-		uwait(1000000); // ждём pre_wait секунд
-		while (GetStatus() < 2) {				
-			if (GetStatus() == 0) {
-				MHome();
-				std::cout << "VANC measurements stopped by user" << endl;
-				make_logs(folder, "VANC measurements stopped by user ");
-				exit(0);
-			}
-		}
+		if (CheckStatus("Touch scan stopped by user")) return; // ждём pre_wait секунд		
 	}
 
 	ZCard.SingleAnalogRead();
@@ -924,15 +896,7 @@ void Regulator::TouchScan(double bias_, double bwa, double crit_V, double x_star
 		scan.SaveRow(y);
 		if (GetStatus() < 2) {
 			piezo.Move(Vecter(0, 0, -up_mult * bwa), 100, djump / 4, ZCard, XYCard);
-			while (GetStatus() < 2) {
-				if (GetStatus() == 0) {
-					MHome();
-					std::cout << "Scanning stopped by user" << endl;
-					make_logs(folder, "Scanning stopped by user ");
-					exit(0);
-				}
-				uwait(100000);
-			}
+			if (CheckStatus("Touch scan stopped by user")) return;
 		}
 	}
 
@@ -1008,12 +972,7 @@ void Regulator::ConstHScan(double bias_, double target_V, double pid_delay, doub
 		while (GetStatus() < 2) {
 			piezo.Move(Vecter(0, 0, -2 * bwa), 100, djump / 4, ZCard, XYCard);
 			height = height - 2 * bwa;
-			if (GetStatus() == 0) {
-				MHome();
-				std::cout << "Scanning stopped by user" << endl;
-				make_logs(folder, "Scanning stopped by user ");
-				exit(0);
-			}
+			if (CheckStatus("Const height scan stopped by user")) return;
 		}
 	}
 
