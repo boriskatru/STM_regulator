@@ -525,8 +525,9 @@ void Regulator::VANC_PID(int count, double target_V, double bias_,  double pre_w
 	ADC_Collect data = XYCard.AnalogRead(100, ADC_BUF_SIZE_2);
 	Timer tmr;
 	string timestr = get_time_string();
-	make_logs(folder, "VANC measurements with PID started \nParameters: \n	Bias: " + to_string(bias_) + "\n	Target_V: " + to_string(target_V) + "\n	Count: " + to_string(count) + "\n	Delay: " + to_string(delay));
-	
+	make_logs(folder, "VANC measurements with PID started \nParameters: \n	Bias: " + to_string(bias_)
+		+ "\n	Target_V: " + to_string(target_V) + "\n	Count: " + to_string(count) + "\n	Delay: " + to_string(delay)
+		+ "\n	X: " + to_string(piezo.Position('X')) + "	Y: " + to_string(piezo.Position('Y')));
 	pid.reset(target_V, bias);
 	pid.save_settings();
 	double  height = IntPID_exp(bias, target_V, pre_wait * 1000000, 0);
