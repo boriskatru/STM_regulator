@@ -522,7 +522,9 @@ void Regulator::VANC_PID(int count, double target_V, double bias_,  double pre_w
 	Timer tmr;
 	string timestr = get_time_string();
 	std::cout << "ANC measurements with PID started: " << endl;
-	make_logs(folder, "VANC measurements with PID started \nParameters: \n	Bias: " + to_string(bias_) + "\n	Target_V: " + to_string(target_V) + "\n	Count: " + to_string(count) + "\n	Delay: " + to_string(delay));
+	make_logs(folder, "VANC measurements with PID started \nParameters: \n	Bias: " + to_string(bias_)
+		+ "\n	Target_V: " + to_string(target_V) + "\n	Count: " + to_string(count) + "\n	Delay: " + to_string(delay)
+			+ "\n	X: " + to_string(piezo.Position('X')) + "	Y: " + to_string(piezo.Position('Y')));
 	
 	pid.reset(target_V, bias);
 	pid.save_settings();
@@ -771,7 +773,7 @@ void Regulator::CapScan(double bias_, double freq, double crit_V, double point_d
 	WriteStatus(0);
 }
 void Regulator::TouchScan(double bias_, double bwa, double crit_V, double x_start, double x_step, double x_stop,
-								double y_start, double y_step, double y_stop, double h_diff_lim, double djump, double up_mult, double pre_wait,  string folder) {
+								double y_start, double y_step, double y_stop, double h_diff_lim, double speed, double up_mult, double pre_wait,  string folder) {
 	WriteStatus(2);
 	//const int param_num = 13;
 	//double* tmp[param_num] = { &bias_, &bwa, &crit_V, &x_start, &x_step, &x_stop, &y_start, &y_step, &y_stop, &h_diff_lim, &djump , &up_mult, &pre_wait };	
@@ -780,11 +782,11 @@ void Regulator::TouchScan(double bias_, double bwa, double crit_V, double x_star
 	//return;
 	string log = "Touch scan started \nParameters: \n	Bias: " + to_string(bias_) +
 		"\n	BWA: " + to_string(bwa) + "\n	Target_V: " + to_string(crit_V) +
-		"\n	DJump: " + to_string(djump) +
+		"\n	Speed: " + to_string(speed) +
 		"\n	X: " + to_string(x_start) + " : " + to_string(x_step) + " : " + to_string(x_stop) +
 		"\n	Y: " + to_string(y_start) + " : " + to_string(y_step) + " : " + to_string(y_stop);
 	make_logs(folder, log);
-
+	double djump = MIN_STEP_SIZE * speed;
 	double h_lim = 4.9;
 	bias = bias_;
 	crit_V += current_offset;	
@@ -891,12 +893,9 @@ void Regulator::TouchScan(double bias_, double bwa, double crit_V, double x_star
 		for (int x = scan.x_n - 1; x >= 0; x--) {
 			
 			uwait(50);
-			is_touch = (ZCard.SingleAnalogRead() > crit_V);
-
-			
+			is_touch = (ZCard.SingleAnalogRead() > crit_V);			
 			if (piezo.Position() < bwa) is_touch = 0;
 			while (!is_touch) {
-
 				piezo.ZJump(djump, ZCard);
 				is_touch = (ZCard.SingleAnalogRead() > crit_V);				
 				if (piezo.Position() > min((h_lim + X_PLANE_TG * x_step * x + Y_PLANE_TG * y_step * y), 4.999)) is_touch = 1;
@@ -1051,7 +1050,7 @@ void Regulator::Pn_CVg_TransistorCalibration(double Vg_min , double Vg_max , dou
 	
 	std::cout << endl << "Output directories created: " << folder + timestr << endl;
 	std::cout << endl << point_num << " Data points expected:"  << endl;
-	std::cout << endl << " Expexted time:" << (delay + ADC_BUF_SIZE_2 / 2) * point_num * 2 / 1000000 / 60 * 13 / 11 << "m" << endl;
+	std::cout << endl << " Expexted time:" << (delay + ADC_BUF_SIZE_2 / 2) * point_num * 2 / 1000000 / 60 * 15 / 11 << "m" << endl;
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	uwait(1000000);

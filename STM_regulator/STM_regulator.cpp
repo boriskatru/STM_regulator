@@ -44,27 +44,30 @@ int main()
     string timestr = get_time_string();
     cout << endl << "Programm started..." << endl;
     //getchar(); getchar();
-    //regul.R_CVg_TransistorCalibration(0.002, 0.45, 0.6, 0.06, 4.0);            // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; X4 to amplified C3
-    //regul.Pn_CVg_TransistorCalibration(0.44, 0.6, 0.001);                        // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
+    //regul.R_CVg_TransistorCalibration(0.002, 0.45, 0.58, 0.08, 2.0);            // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; X4 to amplified C3
+    //regul.Pn_CVg_TransistorCalibration(0.45, 0.58, 0.001);                        // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
     //getchar(); getchar();
-    //regul.StepXY(50, -200);
-    //regul.Retract(100, 1.0, 1);
+    //regul.StepXY(-50, -50);
+    //regul.Retract(5, 1.0, 1);
+    //regul.StepXY(2, 0);
+    
     //regul.StepXY(-20, -20);
-    //regul.Landing(5, 4.5, 0.08, 0, MIN_STEP_SIZE/50);
-    //regul.StepXY(-1, 0, 1, 4);
     //getchar(); getchar();
- 
-    //regul.TouchScan(0.6, 0.08, 0.06, 0, 0.025, 5, 0, 0.025, 5, 1.6, MIN_STEP_SIZE, 3, 150);
+    //regul.Landing(5, 5.0, 0.2, 0, 1);
+    //regul.StepXY(-1, 0, 1, 4);
+   
+    //regul.Retract(10, 1.0, 0.5);
+    //regul.TouchScan(2.0, 0.12, 0.06, 0.0, 0.025, 5.0, 0.0, 0.025, 5.0, 1.5, 1.0, 2, 300);
     //regul.ConstHScan(0.5, 0.06, 3.0, 2000, 1000 * MIN_STEP_SIZE, 10 * MIN_STEP_SIZE, 2000 * MIN_STEP_SIZE, 1000 * MIN_STEP_SIZE, 10 * MIN_STEP_SIZE, 2000 * MIN_STEP_SIZE, MIN_STEP_SIZE, 0.1, 100);
  
-    regul.piezo.MoveTo(Vecter(0.5, 0.0, 0.0), 5, MIN_STEP_SIZE / 20, regul.ZCard, regul.XYCard);
-    regul.VANC_PID(2000, 0.4, 0.1, 180);
-   /*getchar(); getchar();*/
-    //regul.Landing(5, 5, 0.06, 0, MIN_STEP_SIZE/2);
-   // regul.Retract(15, 0.3, 1);
-   //
-   //regul.CapStepScan(5, 5000, 0.4, 40, 20, 1, 0);
-   //getchar(); getchar();
+    regul.piezo.MoveTo(Vecter(1.625, 2.225, 0.0), 5, MIN_STEP_SIZE / 20, regul.ZCard, regul.XYCard);
+    regul.VANC_PID(2000, 0.32, 0.02, 300);
+    /*getchar(); getchar();*/    
+    //regul.Landing(5, 5, 0.18, 0, 2);
+    //regul.Retract(150, 0.3, 1);
+    //
+    //regul.CapStepScan(5, 5000, 0.4, 40, 20, 1, 0);
+    //getchar(); getchar();
   
    //regul.CapStepScan(5, 5000, 0.4, 50, 50, 2, 2);
 

@@ -97,14 +97,14 @@ inline void make_logs(string folder, string text) {
 inline double TrBiasStepper( double Vg, bool dir ) {
 	short int sign = 1;
 	if (dir == 0) sign = -1;
-	double offset = 0.072;
+	double offset = 0.076;
 	double ranges[6][2] = {
-		{ 0.446, 0.4 },
-		{ 0.432, 0.1 },
-		{ 0.422, 0.03 },
-		{ 0.414, 48 * MIN_STEP_SIZE },
-		{ 0.408, 12 * MIN_STEP_SIZE },
-		{ 0.400, 4 * MIN_STEP_SIZE }
+		{ 0.446, 0.25 },
+		{ 0.436, 0.08 },
+		{ 0.424, 0.015 },
+		{ 0.418, 20 * MIN_STEP_SIZE },
+		{ 0.408, 6 * MIN_STEP_SIZE },
+		{ 0.400, 2 * MIN_STEP_SIZE }
 	};
 	for (int i = 0; i < 6; i++ ) {
 		if (Vg > ranges[i][0] + offset) return (sign * ranges[i][1]);
@@ -302,6 +302,9 @@ public:
 	/// <param name="djump">размер шага плавной развёртки</param>
 	/// <returns>высоту касания в В</returns>
 	double rise(double bias_ = 2, double bwa = 0.1, double target_V = 0.12, double djump = MIN_STEP_SIZE/5, string folder = "../../scans/");
+
+
+
 	/// <summary>
 	/// Процедура лэндинга образца
 	/// </summary>
@@ -309,7 +312,8 @@ public:
 	/// <param name="range">размер скачка</param>
 	/// <param name="target_V">ток детектирования касания, 10*нА</param>
 	/// <param name="delay_micro">задержка в мкс</param>
-	/// <param name="djump">размер шага плавной развёртки</param>
+	/// <param name="step_speed">скорость подъёма в единицах MIN_STEP_SIZE за шаг</param>
+	/// <param name="folder">адрес для логов</param>
 	/// <returns> высота касания в В</returns>
 	double Landing(double bias_ = 2, double range = 5, double target_V = 0.15, double delay_micro = 0, double step_speed = 2, string folder = "../../scans/");
 
@@ -405,12 +409,12 @@ public:
 	/// <param name="y_start"></param>
 	/// <param name="y_step">шаг по оси Y</param>
 	/// <param name="y_stop">размер скана по оси Y</param>
-	/// <param name="djump">размер шага плавной развёртки</param>
+	/// <param name="djump">скорость(размер шага плавной развёртки в единицах MIN_STEP_SIZE)</param>
 	/// <param name="up_mult"> дистанция остановки от поверхности при первичном подъёме (в единицах bwa) </param>
 	/// <param name="pre_wait"> время ожидания после подъёма перед сканом (для релаксации пьезиков) </param>
 	/// <param name="bias_">напряжение на игле, В</param>
 	void TouchScan(double bias_ = 0.6, double bwa = 0.15, double crit_V = 0.25, double x_start = 0, double x_step = 120 * MIN_STEP_SIZE, double x_stop = 15000 * MIN_STEP_SIZE,
-		double y_start = 0, double y_step = 120 * MIN_STEP_SIZE, double y_stop = 15000 * MIN_STEP_SIZE, double h_diff_lim = 5, double djump = MIN_STEP_SIZE, double up_mult = 3, double pre_wait = 300, string folder = "../../scans/");
+		double y_start = 0, double y_step = 120 * MIN_STEP_SIZE, double y_stop = 15000 * MIN_STEP_SIZE, double h_diff_lim = 5, double speed = 1, double up_mult = 3, double pre_wait = 300, string folder = "../../scans/");
 
 
 	

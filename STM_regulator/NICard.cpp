@@ -68,7 +68,7 @@ NICard::NICard() : Card(1, 1, "NICard", 1) {
 	DAQmxCreateTask("", &ao_0); // создаём вывода сигнала на канал NDAC
 	
 
-	DAQmxCreateAIVoltageChan(ai_0, "Dev1/ai0", "", DAQmx_Val_RSE, -5.0, 5.0, DAQmx_Val_Volts, NULL);	// настраиваем задачу считывания
+	DAQmxCreateAIVoltageChan(ai_0, "Dev1/ai0", "", DAQmx_Val_RSE, 0.0, 10.0, DAQmx_Val_Volts, NULL);	// настраиваем задачу считывания
 	DAQmxCfgSampClkTiming(ai_0, "", 250000.0, DAQmx_Val_Rising, DAQmx_Val_HWTimedSinglePoint, PTR_);
 	DAQmxRegisterDoneEvent(ai_0, 0, DoneCallback, NULL);
 
