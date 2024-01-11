@@ -16,6 +16,7 @@
 #include "Scans.h"
 #include "gwyfile.h"
 #include "NICard.h"
+#include "ZurichMFLI.h"
 
 using namespace std;
 #define I_to_nA 10
@@ -236,6 +237,7 @@ public:
 	LCard XYCard;
 	NICard ZCard;
 	PiezoPositioners piezo;
+	ZurichMFLI MFLI;
 	PID pid;
 	string folder;
 

@@ -1054,10 +1054,10 @@ void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double V
 	//LoadParamsFromFile("../../Settings/", "TouchScan.txt", param_num, tmp);
 	//SaveParamsToFile("../../Settings/", "R_CVg_TransistorCalibration.txt", 6, incr, Vg_min, Vg_max, Vsd_crit, Vbias_crit, (double)delay_us);
 	//return;
-	make_logs(folder, "R_CVg_TransistorCalibration started\nTime per point: " + to_string((float)ADC_BUF_SIZE_2 / ADC_TGT_FREQ) + " s");
+	make_logs(folder, "R_CVg_TransistorCalibration started\nTime per point: " + to_string((float)ADC_BUF_SIZE_3 / ADC_TGT_FREQ) + " s");
 
 
-	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 500, ADC_BUF_SIZE_2);
+	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_3 / 500, ADC_BUF_SIZE_3);
 	std::cout << endl << " R_CVg_TransistorCalibration started..." << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
@@ -1090,9 +1090,9 @@ void Regulator::R_CVg_TransistorCalibration(double incr, double Vg_min, double V
 			
 			//uwait(10*delay_us);// проверка влияния задержки в больших сопротивлениях - не помогло
 
-			data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2000, ADC_BUF_SIZE_2);
-			Vsd = data.Average(ADC_BUF_SIZE_2 / 2, R_CALIBR_CH);
-			noise = data.Average(ADC_BUF_SIZE_2 / 2, NOISE_CH);
+			data = XYCard.AnalogRead(ADC_BUF_SIZE_3 / 2000, ADC_BUF_SIZE_3);
+			Vsd = data.Average(ADC_BUF_SIZE_3 / data.ch_count, R_CALIBR_CH);
+			noise = data.Average(ADC_BUF_SIZE_3 / data.ch_count, NOISE_CH);
 
 			file << Vsd << "   " << ZCard.cur_volt[0] << "   " << noise << "   " << Vg << endl;
 			

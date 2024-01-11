@@ -66,10 +66,10 @@ int main()
                 regul.Retract();
                 break;
             case Operation::Steps:
-                regul.StepXY(); // !!!!!!!TODO!!!!!!!!!
+                regul.StepXY();     // !!!!!!!TODO!!!!!!!!!
                 break;
             case Operation::Move:
-                regul.MoveTo();//!!!!!!! TODO!!!!!!!!!
+                regul.MoveTo();     //  !!!!!!! TODO!!!!!!!!!
                 break;
             case Operation::MHome:
                 regul.MHome();
@@ -100,7 +100,7 @@ int main()
                 cout << endl << "ERROR: Unrecognized command" << endl;
                 break;
         }
-        uwait(100000);
+        uwait(250000);
     }
 
     cout << endl << "Programm finished..." << endl;

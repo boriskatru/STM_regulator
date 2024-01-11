@@ -85,8 +85,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Program Files\L-Card\include;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files\L-Card\lib\msvc64;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\lib64\msvc;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\lib32\msvc;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files\L-Card\include;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\include\;C:\Users\Tunnel Noise\Desktop\STM\STM_regulator\Zurich\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files\L-Card\lib\msvc64;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\lib64\msvc;C:\Program Files (x86)\National Instruments\Shared\ExternalCompilerSupport\C\lib32\msvc;C:\Users\Tunnel Noise\Desktop\STM\STM_regulator\Zurich\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -141,7 +141,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <Optimization>MaxSpeed</Optimization>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -155,7 +155,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>l502api.lib;e502api.lib;x502api.lib;NIDAQmx.lib;nisyscfg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>l502api.lib;e502api.lib;x502api.lib;NIDAQmx.lib;nisyscfg.lib;ziAPI-win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
     </Link>
   </ItemDefinitionGroup>
@@ -168,6 +168,7 @@
     <ClCompile Include="regulator.cpp" />
     <ClCompile Include="Scans.cpp" />
     <ClCompile Include="STM_regulator.cpp" />
+    <ClCompile Include="ZurichMFLI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Card.h" />
@@ -181,6 +182,8 @@
     <ClInclude Include="Settings.h" />
     <ClInclude Include="vecters.h" />
     <ClInclude Include="wait_bh.h" />
+    <ClInclude Include="ziUtils.hpp" />
+    <ClInclude Include="ZurichMFLI.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="gwyfile.def" />
