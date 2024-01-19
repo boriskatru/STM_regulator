@@ -93,7 +93,7 @@ void ADC_Collect::print_f_VANC(string filename, string filetype, string director
 }
 
 LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), data(ADC_CH_COUNT, ADC_BUF_SIZE), next_lch(0), ADC_CH_COUNT(ADC_CH_COUNT) {
-	
+	status = 0;
 	buf = (uint32_t*)calloc(ADC_BUF_SIZE, sizeof(uint32_t));
 	get_list_res = L502_GetSerialList(serial_list, MAX_MODULES_CNT, L502_GETDEVS_FLAGS_ONLY_NOT_OPENED, NULL);
 	if (get_list_res < 0)
@@ -155,7 +155,9 @@ LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZ
 		cout << "Îøèáêà â L502_SetLChannel()" << error << endl;
 
 	error = L502_AsyncOutDac(hnd, L502_DAC_CH1, 0.0, 0x0001) + L502_AsyncOutDac(hnd, L502_DAC_CH2, 0.0, 0x0001);
-	while (error != 0) {
+	int cnt = 0;
+	while ((error != 0) && (cnt < 100)) {
+		cnt++;
 		cerr << "Îøèáêà  " << error  << "  â L502_AsyncOutDac()" << endl;
 		error = L502_Close(hnd);
 		if (error != 0) cerr << "Îøèáêà  " << error << "  â L502_Close()" << endl;
@@ -163,6 +165,7 @@ LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZ
 		if (error != 0) cerr << "Îøèáêà  " << error << "  â L502_Open()" << endl;
 		error = L502_AsyncOutDac(hnd, L502_DAC_CH1, 0.0, 0x0001) + L502_AsyncOutDac(hnd, L502_DAC_CH2, 0.0, 0x0001);
 	}
+	if (cnt >= 100) return;
 	error = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ, &ADC_FRAME_FREQ);
 	if (error != 0) cerr << "Îøèáêà  " << error << " â L502_SetAdcFreq()" << endl;
 	else cout << "ADC_COLLECT_FREQ = " << ADC_COLLECT_FREQ << endl << "ADC_FRAME_FREQ = " << ADC_FRAME_FREQ << endl;
@@ -181,6 +184,8 @@ LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZ
 	L502_Configure(hnd, 0);
 	if (error != 0) cerr << "Îøèáêà  " << error << " â L502_Configure()" << endl;
 	
+
+	if (error == 0) status = 1;
 	
 }
 /// <summary>

@@ -34,7 +34,7 @@ public:
 	TaskHandle   ao_1 ;
 
 	double*	 data_;
-
+	int status;
 
 	NICard();
 	~NICard();

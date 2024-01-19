@@ -22,10 +22,10 @@ class ZurichMFLI {
     const char* deviceInterface;
     char nodePath[1024];
     int filterOrder = 3;
-
+   
     ZIDoubleData tm_const_ffreq(ZIDoubleData freq);
 public:
-
+    int status;
     const char* deviceAddress;
     ZurichMFLI(const char* dev = "dev4569"); 
 

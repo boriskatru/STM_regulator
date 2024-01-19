@@ -5,6 +5,7 @@
 ///////////////////// НАСТРОЙКИ LCARD /////////////////////
 
 #define MAX_MODULES_CNT 3
+#define ADC_CHANEL_CNT 6
 #define ADC_BUF_SIZE_1 1		
 #define ADC_BUF_SIZE_2 4000000			// размер длинного буфера платы оси XY  для чтения ВАХ
 #define ADC_BUF_SIZE_3 300000  //размер длинного буфера платы оси XY  для калибровок 
@@ -81,6 +82,9 @@ const std::string EXEC_STATUS_FILE = SETTINGS_FOLDER + "status/EXEC_STATUS.txt";
 const std::string COMMAND_STATUS_FILE = SETTINGS_FOLDER + "status/COMMAND_STATUS.txt";
 
 const std::string PROGRESS_STATUS_FILE = SETTINGS_FOLDER + "status/PROGRESS_STATUS.txt";
+
+
+const std::string EQUIPMENT_STATUS_FILE = SETTINGS_FOLDER + "EQUIPMENT_STATUS.txt";
 
 const std::string StepXY_SETTINGS = SETTINGS_FOLDER + "StepXY.txt";
 const std::string MoveXY_SETTINGS = SETTINGS_FOLDER + "MoveXY.txt";

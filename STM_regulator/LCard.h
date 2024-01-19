@@ -77,7 +77,7 @@ public:
 	/// </summary>
 	/// <param name="card_No">номер платы по порядку запуска </param>
 	/// <param name="ADC_CH_COUNT"> количество используемых каналов ввода</param>
-	LCard(int card_No = 1, int ADC_CH_COUNT = 6, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
+	LCard(int card_No = 1, int ADC_CH_COUNT = ADC_CHANEL_CNT, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
 	~LCard();
 
 	uint32_t count_ADC_data = 0;
@@ -86,7 +86,7 @@ public:
 	ADC_Collect data;
 	uint32_t next_lch;
 	
-	
+	int status;
 	void SetMode(uint32_t flags);
 	void SingleAnalogOut(double data, unsigned int channel = L502_DAC_CH1, double timeout = 0.1);
 	void SingleDigitalOut(uint32_t val, uint32_t mask);

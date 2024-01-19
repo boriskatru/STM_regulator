@@ -53,7 +53,7 @@ Error:
 }
 
 NICard::NICard() : Card(1, 1, "NICard", 1) {
-
+	status = 0;
 	PTR_ = ADC_BUF_SIZE_1;
 	data_ =  (double*)calloc(PTR_, sizeof(double));;
 	error = 0;
@@ -77,7 +77,7 @@ NICard::NICard() : Card(1, 1, "NICard", 1) {
 	DAQmxCfgSampClkTiming(ao_0, "", 900000.0, DAQmx_Val_Rising, DAQmx_Val_ContSamps, PTW_);
 
 
-	
+	status = 1;
 	is_writing[0] = 0;
 }
 

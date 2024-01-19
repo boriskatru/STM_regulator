@@ -51,7 +51,7 @@ int main()
     }
     regul.XYCard.StopReadStream();
     double data1 = regul.ZCard.SingleAnalogRead();
-    cout << "NI ch value: " << data1 << endl;
+    cout << "NI ch value: " << data1 << endl << endl;
 
     /////////////////КОНЕЦ ТЕСТА//////////////////////////
     Timer tmr;
@@ -123,29 +123,3 @@ int main()
     return 0;
 }
 
-
-//                   Перемещения                   //
-//////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
-//regul.Retract(10, 0.3, 2);
-//regul.StepXY(-10, 10);
-//regul.ZStep(FORWARD);
-//regul.Landing(2, 5, 0.25);
-//regul.ZCard.BackstepZ();
-//regul.piezo.MoveTo(Vecter(1.0, 1.0, 0), 100, MIN_STEP_SIZE, regul.ZCard, regul.XYCard);
-
-
-//                   Сканы и измерения                    //
-//////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
-//regul.TouchScan(0.3, 0.15, 0.08, 4, 4, 0.01, 0.01, MIN_STEP_SIZE, 2);
-//regul.CapStepScan(5, 5000, 0.2, 50, 50, 1, 1);
-//regul.CapScan(5, 5000, 0.25, 2000, 0, 0.1, 5, 0, 0.1, 5, 3.5);
-//regul.ConstHScan(0.2, 0.2, 2, 2000, 0 * MIN_STEP_SIZE, 20 * MIN_STEP_SIZE, 2000 * MIN_STEP_SIZE, 0 * MIN_STEP_SIZE, 20 * MIN_STEP_SIZE, 2000 * MIN_STEP_SIZE, MIN_STEP_SIZE, 0.05, 200);
-//regul.VANC_PID(20);
-
-
-
-
-//                   КАЛИБРОВКИ                     //
-//////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!////////
-//regul.Pn_CVg_TransistorCalibration(0.35,0.6,0.002);           // To calibrate Noise-V(gate) connect Z_coarse(NDAC1) to C1
-//regul.R_CVg_TransistorCalibration();                          // To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC2) to C2; X3 to amplified C3

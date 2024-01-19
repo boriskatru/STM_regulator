@@ -192,30 +192,6 @@ class Regulator
 	/// <param name="status"></param>
 	/// <param name="folder"></param>
 	void WriteExecStatus(int status = 2);
-	
-
-
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="folder"></param>
-	void ResetPIDFromFile();
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="folder"></param>
-	void LoadParamsFromFile(string path, int count , double**arr);
-	void SaveParamsToFile(string path, int count, ...);
-
-public:
-	LCard XYCard;
-	NICard ZCard;
-	PiezoPositioners piezo;
-	ZurichMFLI MFLI;
-	PID pid;
-	string folder;
-	string session_folder;
-
 	/// <summary>
 	/// 
 	/// </summary>
@@ -227,7 +203,28 @@ public:
 	/// </summary>
 	/// <param name="path"></param>
 	/// <param name="file"></param>
-	void AddFileToSession(string path, string file );
+	void AddFileToSession(string path, string file);
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="folder"></param>
+	void ResetPIDFromFile();
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="folder"></param>
+	void LoadParamsFromFile(string path, int count , double**arr);
+	void SaveParamsToFile(string path, int count, ...);
+	void SaveEquipmentStatus(string path = EQUIPMENT_STATUS_FILE);
+
+public:
+	LCard XYCard;
+	NICard ZCard;
+	PiezoPositioners piezo;
+	ZurichMFLI MFLI;
+	PID pid;
+	string folder;
+	string session_folder;
 
 	vector<double> buffer = vector<double>(5000, 0);
 	double frequency;		

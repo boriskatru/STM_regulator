@@ -83,6 +83,7 @@ void Regulator::WriteProgressStatus(string name, double percent, double estimate
 	file << biasDC << endl;
 	file << biasAC << endl;
 	file << frequency << endl;
+	file.close();
 }
 
 void Regulator::Step(int axis, int dir, double step_size, double step_speed) {
@@ -104,13 +105,16 @@ void Regulator::Step(int axis, int dir, double step_size, double step_speed) {
 
 
 Regulator::Regulator(double i_offset, double noise_limit_V, string folder):
-	XYCard(1, 6, ADC_BUF_SIZE_2),
+	XYCard(1, ADC_CHANEL_CNT, ADC_BUF_SIZE_2),
 	ZCard(),
+	MFLI(),
 	noise_limit_V(noise_limit_V),
 	frequency(frequency), biasDC(0), biasAC(0),
 	folder(folder) {
+	SaveEquipmentStatus();
 	ZCard.SingleAnalogOut(0, Z_OUT);
 	ZCard.SingleAnalogOut(0, Z_OUT_FINE);
+
 }
 Regulator::~Regulator() {
 	MHome();
@@ -249,6 +253,13 @@ void Regulator::SaveParamsToFile(string path, int count, ...)
 	}
 	va_end(vl);
 
+	file.close();
+}
+void Regulator::SaveEquipmentStatus(string path)
+{
+	ofstream file;
+	file.open(folder + path, std::ios::out);
+	file << ZCard.status << endl << XYCard.status << endl << MFLI.status;
 	file.close();
 }
 void Regulator::ZStep(int dir, double step_size, bool makelogs) {

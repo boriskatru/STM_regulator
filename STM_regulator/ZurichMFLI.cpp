@@ -15,6 +15,7 @@ ZIDoubleData ZurichMFLI::tm_const_ffreq(ZIDoubleData freq) {
 }
 
 ZurichMFLI::ZurichMFLI(const char* dev) {
+    status = 0;
     deviceAddress = ziUtilsGetEnv("LABONE_DEVICE", dev);
     printf("ENV LABONE_DEVICE=%s\n", deviceAddress);
     dataServer = ziUtilsGetEnv("LABONE_SERVER", "192.168.1.172");
@@ -23,6 +24,7 @@ ZurichMFLI::ZurichMFLI(const char* dev) {
     if (isError(ziAPIInit(&conn)))
     {
         cerr << "No Zurich " << dev << "   MFLI CONNECTION";
+        return;
     }
 
     ziAPISetDebugLevel(0);
@@ -35,13 +37,16 @@ ZurichMFLI::ZurichMFLI(const char* dev) {
     catch (std::runtime_error& e)
     {
         runtime_msg(conn, e);
+        return;
     }
     catch (...)
     {
         fprintf(stderr, "[ERROR] Unexpected error\n.No Zurich MFLI CONNECTION");
+        return;
     }
     setACEnable();
     setSignalEnable();
+    status = 1;
 }
 
 void ZurichMFLI::setOscFreq(ZIDoubleData freq) {
