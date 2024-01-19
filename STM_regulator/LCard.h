@@ -9,13 +9,7 @@
 #include "wait_bh.h"
 #include "l502api.h"
 #include "Card.h"
-
-#define ANALOG_OUT_FLAG 0x0001
-#define ADC_TGT_FREQ 2000000
-#define BIAS_CH 0
-#define CURRENT_CH 4
-#define NOISE_CH 2
-#define R_CALIBR_CH 4
+#include "Settings.h"
 
 static char serial_list[MAX_MODULES_CNT][L502_SERIAL_SIZE];
 const char serial_1[L502_SERIAL_SIZE] = "4T439903";

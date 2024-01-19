@@ -10,9 +10,9 @@
 #include <NIDAQmx.h>  
 #include "wait_bh.h"
 #include "Card.h"
+#include "Settings.h"
 
 
-#define NI_BUF_SIZE 1
 inline double ZERO_ARR[2] = { 0,0 };
 
 int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);

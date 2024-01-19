@@ -5,7 +5,7 @@
 using namespace std;
 using namespace std::chrono;
 
-#define COARSE_TO_FINE 14.6
+
 
 /// <summary>
 /// Обновлении/изменение позиции пьезокристаллов
@@ -107,6 +107,8 @@ double PiezoPositioners::Position(char axis , char unit ) {
 			return position_V.x_proj;
 		if ((axis == 'Y') || (axis == 'y'))
 			return position_V.y_proj;
+		cout << "Unknown axis. Please use X,Y or Z " << endl;
+		return -1;
 	}
 	else if ((unit == 'M') || (unit == 'm') || (unit == 'N') || (unit == 'n')) {
 		if ((axis == 'Z') || (axis == 'z'))
@@ -115,6 +117,12 @@ double PiezoPositioners::Position(char axis , char unit ) {
 			return position_nm.x_proj;
 		if ((axis == 'Y') || (axis == 'y'))
 			return position_nm.y_proj;
+		cout << "Unknown axis. Please use X,Y or Z " << endl;
+		return -1;
+	}
+	else {
+		cout << "Unknown unit. Please use V or M (nanometrs)" << endl;
+		return -1;
 	}
 }
 /// <summary>

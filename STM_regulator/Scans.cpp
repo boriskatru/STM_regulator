@@ -123,11 +123,12 @@ void VANC::print_(string name) {//при выводе одной вахи в один файл
 
 
 
-Scan::Scan(double x_dim, double y_dim, double x_step, double y_step) :
+Scan::Scan(double x_dim, double y_dim, double x_step, double y_step, double voltage_) :
 	x_dim(x_dim),
 	y_dim(y_dim),
 	x_step(x_step),
 	y_step(y_step),
+	voltage(voltage_),
 	HFWplot(y_dim / y_step, vector<double>(x_dim / x_step, 0)),
 	HBWplot(y_dim / y_step, vector<double>(x_dim / x_step, 0)),
 	CFWplot(y_dim / y_step, vector<double>(x_dim / x_step, 0)),
@@ -151,11 +152,11 @@ Scan::Scan(double x_dim, double y_dim, double x_step, double y_step) :
 	std::filesystem::create_directories(data);
 	save_dir = data;
 	fwname = "FW_XD" + to_string(x_dim) + "_XS" + to_string(x_step)
-		+ "_YD" + to_string(y_dim) + "_YS" + to_string(y_step) + "_"
-		+ buffern + ".dat";
+		+ "_YD" + to_string(y_dim) + "_YS" + to_string(y_step) + "_V"
+		+ to_string(voltage) + "_" + buffern + ".dat";
 	bwname = "BW_XD" + to_string(x_dim) + "_XS" + to_string(x_step)
-		+ "_YD" + to_string(y_dim) + "_YS" + to_string(y_step) + "_"
-		+ buffern + ".dat";
+		+ "_YD" + to_string(y_dim) + "_YS" + to_string(y_step) + "_V"
+		+ to_string(voltage) + "_" + buffern + ".dat";
 }
 void Scan::SaveFiles(string save_d ) {
 
@@ -214,8 +215,8 @@ void Scan::SaveRow(int row, string save_d) {
 }
 
 
-VAC_Scan::VAC_Scan(double x_dim, double y_dim, double x_step, double y_step, int VAC_count, int points_count) :
-	Scan(x_dim, y_dim, x_step, y_step),
+VAC_Scan::VAC_Scan(double x_dim, double y_dim, double x_step, double y_step, double voltage_,int VAC_count, int points_count) :
+	Scan(x_dim, y_dim, x_step, y_step, voltage_),
 	FWVACs(y_n, vector< vector<VAC>>(x_n, vector<VAC>(VAC_count, points_count))),
 	BWVACs(y_n, vector< vector<VAC>>(x_n, vector<VAC>(VAC_count, points_count))) {
 

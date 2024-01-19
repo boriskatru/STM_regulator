@@ -1,3 +1,5 @@
+#pragma once
+
 // Copyright [2016] Zurich Instruments AG
 //
 // Note: The utility functions included in this header file are a preliminary
@@ -28,7 +30,7 @@
 #endif
 #include <stdexcept>
 
-void sleep(int ms)
+inline void sleep(int ms)
 {
 #ifdef _WIN32
   Sleep(ms);
@@ -76,7 +78,7 @@ static inline void checkLastError(ZIConnection conn)
 
 /// Query an environment variable with a default value. If the
 /// environment variable is not set the defaultValue will be returned.
-const char* ziUtilsGetEnv(const char* env, const char* defaultValue)
+inline const char* ziUtilsGetEnv(const char* env, const char* defaultValue)
 {
   const char* value = std::getenv(env);
   if (value == NULL)

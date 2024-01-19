@@ -15,8 +15,8 @@
 #include "vecters.h"
 #include "wait_bh.h"
 #include "gwyfile.h"
-#define FORWARD true
-#define BACKWARD false
+#include "Settings.h"
+
 
 class VAC {
 	/// <summary>
@@ -117,6 +117,8 @@ public:
 	/* шаг скана по Y (В) */
 	double y_step;
 	int x_n, y_n;
+	/* Напряжение, при котором измерялся скан */
+	double voltage;
 	vector <vector<double>> HFWplot;
 	vector <vector<double>> HBWplot;
 	vector <vector<double>> CFWplot;
@@ -131,7 +133,7 @@ public:
 	/// <param name="y_dim">Размер скана по Y, В</param>
 	/// <param name="x_step">Размер шага X, В</param>
 	/// <param name="y_step">Размер шага Y, В</param>
-	Scan(double x_dim, double y_dim, double x_step, double y_step);
+	Scan(double x_dim, double y_dim, double x_step, double y_step, double voltage_);
 	/// <summary>
 	/// Сохраниение скана в файл (целиком)
 	/// </summary>
@@ -149,6 +151,6 @@ public:
 class VAC_Scan : public Scan {
 	vector<vector<vector<VAC>>> FWVACs;
 	vector<vector<vector<VAC>>> BWVACs;
-	VAC_Scan(double x_dim, double y_dim, double x_step, double y_step, int VAC_count, int points_count);
+	VAC_Scan(double x_dim, double y_dim, double x_step, double y_step, double voltage_, int VAC_count, int points_count);
 	void SaveFiles(string save_d = "-");
 };

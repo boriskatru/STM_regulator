@@ -16,16 +16,19 @@ using namespace std;
 //using namespace std::chrono;
 
 enum class Operation{Landing,Retract,Steps,Move,MHome,VANC,TouchScan,CapStepScan,Calibration_N_V, Calibration_R_V, Exit, Waiting};
-Operation LoadOpeartion(string path = "../../Settings/CurrentOperation.txt") {
+Operation LoadOpeartion(string path = MAIN_FOLDER + COMMAND_STATUS_FILE) {
     fstream file;
     file.open(path, std::ios::in);
     int input;
     file >> input;
     file.close();
+    return static_cast<Operation>(input);
+}
+void FinishOperation(string path = MAIN_FOLDER + COMMAND_STATUS_FILE) {
+    fstream file;
     file.open(path, std::ios::out);
     file << static_cast<int>(Operation::Waiting);
-    file.close();
-    return static_cast<Operation>(input);
+    file.close();  
 }
 
 
@@ -54,43 +57,54 @@ int main()
     Timer tmr;
     string timestr = get_time_string();
     cout << endl << "Programm started..." << endl;
-    //getchar(); getchar();
+    cout << regul.ReadDirectory() << endl;
+    uwait(100000000);
     Operation command = Operation::Waiting;
     while (1) {
         command = LoadOpeartion();
         switch (command) {
             case Operation::Landing:
                 regul.Landing();
+                FinishOperation();
                 break;
             case Operation::Retract:
                 regul.Retract();
+                FinishOperation();
                 break;
             case Operation::Steps:
-                regul.StepXY();     // !!!!!!!TODO!!!!!!!!!
+                regul.StepXY();     
+                FinishOperation();
                 break;
             case Operation::Move:
-                regul.MoveTo();     //  !!!!!!! TODO!!!!!!!!!
+                regul.MoveTo();    
+                FinishOperation();
                 break;
             case Operation::MHome:
-                regul.MHome();
+                regul.MHome(DEFAULT_MICROSTEP_SIZE, true);
+                FinishOperation();
                 break;
             case Operation::VANC:
                 regul.VANC_PID();
+                FinishOperation();
                 break;
             case Operation::TouchScan:
                 regul.TouchScan();
+                FinishOperation();
                 break;
             case Operation::CapStepScan:
                 regul.CapStepScan();
+                FinishOperation();
                 break;
             case Operation::Calibration_N_V:
-                regul.Pn_CVg_TransistorCalibration();
+                regul.Pn_CVg_TransistorCalibration();//  !!!!!!! TODO!!!!!!!!!
+                FinishOperation();
                 break;
             case Operation::Calibration_R_V:
-                regul.R_CVg_TransistorCalibration();
+                regul.R_CVg_TransistorCalibration();//  !!!!!!! TODO!!!!!!!!!
+                FinishOperation();
                 break;
             case Operation::Waiting:
-                //cout << endl << "Waiting..." << endl;
+                uwait(350000);                 
                 break;
             case Operation::Exit:
                 cout << endl << "Programm finished..." << endl;
@@ -98,9 +112,11 @@ int main()
                 exit(0);
             default:
                 cout << endl << "ERROR: Unrecognized command" << endl;
+                FinishOperation();
                 break;
         }
-        uwait(250000);
+        
+       
     }
 
     cout << endl << "Programm finished..." << endl;
