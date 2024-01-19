@@ -199,7 +199,7 @@ void Regulator::WriteExecStatus(int status)
 	file << status << std::flush;
 	file.close();
 }
-string Regulator::ReadDirectory(string path)
+string Regulator::ReadSessionDirectory(string path)
 {
 	ifstream file;
 	string tmp;
@@ -212,6 +212,7 @@ string Regulator::ReadDirectory(string path)
 }
 void Regulator::AddFileToSession(string path, string file)
 {
+	ReadSessionDirectory();
 	ofstream list;
 	list.open(session_folder + path, std::ios_base::app);
 	list << file << endl;

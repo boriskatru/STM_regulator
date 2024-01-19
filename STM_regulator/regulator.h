@@ -221,7 +221,7 @@ public:
 	/// </summary>
 	/// <param name="path"></param>
 	/// <returns></returns>
-	string ReadDirectory(string path = SESSION_FILE_NAME);
+	string ReadSessionDirectory(string path = SESSION_FILE_NAME);
 	/// <summary>
 	/// 
 	/// </summary>

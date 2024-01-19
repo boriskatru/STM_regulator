@@ -57,8 +57,7 @@ int main()
     Timer tmr;
     string timestr = get_time_string();
     cout << endl << "Programm started..." << endl;
-    cout << regul.ReadDirectory() << endl;
-    uwait(100000000);
+
     Operation command = Operation::Waiting;
     while (1) {
         command = LoadOpeartion();
