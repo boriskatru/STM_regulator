@@ -143,14 +143,14 @@ Scan::Scan(double x_dim, double y_dim, double x_step, double y_step, double volt
 #pragma warning(suppress : 4996)
 	timeinfo = localtime(&rawtime);					// текущее локальное время, представленное в структуре
 	strftime(buffern, 20, "%x", timeinfo);
-	string data = "../../scans/";
+	string data = MAIN_FOLDER+"scans/";
 	data += buffern;
 	data += "/";
 	strftime(buffern, 20, "%H_%M", timeinfo);
 
 	data += buffern;
 	std::filesystem::create_directories(data);
-	save_dir = data;
+	save_dir = data + "/";
 	fwname = "FW_XD" + to_string(x_dim) + "_XS" + to_string(x_step)
 		+ "_YD" + to_string(y_dim) + "_YS" + to_string(y_step) + "_V"
 		+ to_string(voltage) + "_" + buffern + ".dat";
@@ -166,10 +166,10 @@ void Scan::SaveFiles(string save_d ) {
 
 
 	ofstream Hforward, Hbackward, Cforward, Cbackward;
-	Hforward.open(save_dir + "/H" + fwname, std::ofstream::out);
-	Hbackward.open(save_dir + "/H" + bwname, std::ofstream::out);
-	Cforward.open(save_dir + "/C" + fwname, std::ofstream::out);
-	Cbackward.open(save_dir + "/C" + bwname, std::ofstream::out);
+	Hforward.open(save_dir + "H" + fwname, std::ofstream::out);
+	Hbackward.open(save_dir + "H" + bwname, std::ofstream::out);
+	Cforward.open(save_dir + "C" + fwname, std::ofstream::out);
+	Cbackward.open(save_dir + "C" + bwname, std::ofstream::out);
 	for (int y = 0; y < y_n; y++) {
 
 		for (int x = 0; x < x_n; x++) {

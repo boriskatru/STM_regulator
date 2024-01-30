@@ -217,6 +217,7 @@ string Regulator::ReadSessionDirectory(string path)
 void Regulator::AddFileToSession(string path, string file)
 {
 	ReadSessionDirectory();
+	cout <<"Filename " << file << " added to session path "<< session_folder + path <<endl;
 	ofstream list;
 	list.open(session_folder + path, std::ios_base::app);
 	list << file << endl;
@@ -698,8 +699,8 @@ void Regulator::CapStepScan() {
 	make_logs(log);
 	
 	
-	Scan scan_fw(x_steps, y_steps, 1,1, biasAC);
-	AddFileToSession(CAP_SCAN_LIST_NAME, scan_fw.fwname);
+	Scan scan(x_steps, y_steps, 1,1, biasAC);
+	AddFileToSession(CAP_SCAN_LIST_NAME, scan.save_dir + "H" + scan.fwname);
 	//Scan scan_bw(x_steps*X_FW_BW, y_steps, 1, 1);
 	/*Обнуляем всё*/
 	
@@ -708,15 +709,15 @@ void Regulator::CapStepScan() {
 	int fwx_steps = 0;
 	int bwx_steps = 0;
 	/*Начало сканирования*/
-	for (int y = 0; y < scan_fw.y_n; y++) {
+	for (int y = 0; y < scan.y_n; y++) {
 		/*передний ход:*/
 
-		for (int x = 0; x < scan_fw.x_n; x++) {
+		for (int x = 0; x < scan.x_n; x++) {
 
 			uwait(50000);	
-			scan_fw.HFWplot[y][x] = piezo.Position();
-			scan_fw.CFWplot[y][x] = ZCard.SingleAnalogRead();
-			if (scan_fw.CFWplot[y][x] > crit_V) {
+			scan.HFWplot[y][x] = piezo.Position();
+			scan.CFWplot[y][x] = ZCard.SingleAnalogRead();
+			if (scan.CFWplot[y][x] > crit_V) {
 				StepXY(-X_step_sz, -Y_step_sz, false, step_V);				
 				make_logs("!!!WARNING!!!  Obstacle detected! Capasitance step scan stopped" );
 				return;
@@ -733,9 +734,9 @@ void Regulator::CapStepScan() {
 
 		/*ход по Y:*/
 		StepXY(0, Y_step_sz, false, step_V); // если закоментированно, то не едет по Y!!
-		std::cout << "current y:	" << y << "	of	" << scan_fw.y_n << endl;
-		scan_fw.SaveRow(y);
-		WriteProgressStatus("CAPACITANCE SCAN", y * 100 / scan_fw.y_n, 100);
+		std::cout << "current y:	" << y << "	of	" << scan.y_n << endl;
+		scan.SaveRow(y);
+		WriteProgressStatus("CAPACITANCE SCAN", y * 100 / scan.y_n, 100);
 		//scan_bw.SaveRow(y);
 	}
 	
@@ -775,7 +776,7 @@ void Regulator::TouchScan() {
 	make_logs(log);
 		
 	Scan scan(abs(x_stop - x_start), abs(y_stop - y_start), abs(x_step), abs(y_step), biasDC);
-	AddFileToSession(SCAN_LIST_NAME, scan.fwname);
+	AddFileToSession(SCAN_LIST_NAME, scan.save_dir + "H" +  scan.fwname);
 	/*Идём на старт*/
 	bool is_touch = false;
 	piezo.MoveTo(Vecter(x_start, y_start, 0), 0, DEFAULT_MICROSTEP_SIZE, ZCard, XYCard);

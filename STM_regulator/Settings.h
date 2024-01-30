@@ -98,6 +98,6 @@ const std::string RCalibr_SETTINGS = SETTINGS_FOLDER + "R_CVg_TransistorCalibrat
 
 const std::string SESSION_FILE_NAME = SETTINGS_FOLDER + "SESSION_DATA.txt";
 
-const std::string VANC_LIST_NAME = "vac_list.txt";
-const std::string SCAN_LIST_NAME = "scans_list.txt";
-const std::string CAP_SCAN_LIST_NAME = "cap_scans_list.txt";
+const std::string VANC_LIST_NAME = "\\vac_list.txt";
+const std::string SCAN_LIST_NAME = "\\scans_list.txt";
+const std::string CAP_SCAN_LIST_NAME = "\\cap_scans_list.txt";
