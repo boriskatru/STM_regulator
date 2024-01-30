@@ -97,6 +97,7 @@ const std::string PNCalibr_SETTINGS = SETTINGS_FOLDER + "Pn_CVg_TransistorCalibr
 const std::string RCalibr_SETTINGS = SETTINGS_FOLDER + "R_CVg_TransistorCalibration.txt";
 
 const std::string SESSION_FILE_NAME = SETTINGS_FOLDER + "SESSION_DATA.txt";
+const std::string LAST_VANC_FILE_NAME = SETTINGS_FOLDER + "LAST_VANC.txt";
 
 const std::string VANC_LIST_NAME = "\\vac_list.txt";
 const std::string SCAN_LIST_NAME = "\\scans_list.txt";

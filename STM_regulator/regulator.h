@@ -207,6 +207,12 @@ class Regulator
 	/// <summary>
 	/// 
 	/// </summary>
+	/// <param name="path"></param>
+	/// <param name="file"></param>
+	void WriteVANCDirectory(string foldername, string path = LAST_VANC_FILE_NAME);
+	/// <summary>
+	/// 
+	/// </summary>
 	/// <param name="folder"></param>
 	void ResetPIDFromFile();
 	/// <summary>

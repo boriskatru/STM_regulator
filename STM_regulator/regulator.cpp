@@ -223,6 +223,14 @@ void Regulator::AddFileToSession(string path, string file)
 	list << file << endl;
 	list.close();
 }
+void Regulator::WriteVANCDirectory(string foldername, string path)
+{
+	ofstream file;
+	file.open(folder + path, std::ios::out);
+	file << foldername << std::flush;
+	file.close();
+
+}
 void Regulator::ResetPIDFromFile()
 {
 	pid.reset_from_file(folder);
@@ -640,6 +648,7 @@ void Regulator::VANC_PID()
 		+ "\n	X: " + to_string(piezo.Position('X')) + "	Y: " + to_string(piezo.Position('Y')));
 	pid.reset(target_V, biasAC);
 	pid.save_settings();
+	WriteVANCDirectory(folder + SCAN_FOLDER + timestr);
 	double  height = IntPID_exp(biasAC, target_V, pre_wait * 1000000, 0);
 	
 	for (int i = 1; i <= count; i++) {
@@ -648,7 +657,7 @@ void Regulator::VANC_PID()
 		height = IntPID_exp(biasAC, target_V, delay * 1000000, height);
 		data = XYCard.AnalogRead(0, ADC_BUF_SIZE_2);
 		XYCard.StopReadStream();
-		data.print_f_VANC("VANC_" + to_string(i), ".bin", "../../scans/" + timestr);
+		data.print_f_VANC("VANC_" + to_string(i), folder + SCAN_FOLDER + timestr);
 		cout << "done   " << i << " of " << count << " VANCS" << endl;
 		//cin >> stop;
 		//if (stop) break;
