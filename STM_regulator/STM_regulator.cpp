@@ -103,7 +103,7 @@ int main()
                 FinishOperation();
                 break;
             case Operation::Waiting:
-                uwait(350000);                 
+                Sleep(350);              
                 break;
             case Operation::Exit:
                 cout << endl << "Programm finished..." << endl;

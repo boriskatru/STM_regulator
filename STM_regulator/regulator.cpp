@@ -50,8 +50,14 @@ void PID::reset(double target_, double bias_, double P_, double I_, double D_){
 
 void PID::reset_from_file(string folder){
 	ifstream file;
-	file.open(folder + PID_SETTINGS_FILE, std::ios::in);
-	file >> target >> bias >> P >> I >> D;	
+	
+	file.open(folder + VANC_SETTINGS, std::ios::in);
+	file >> bias;
+	for (int i = 0; i < 8; i++) {
+		file >> target;
+	}
+	file >> P >> I >> D;
+	//cout << endl << bias << "   " << target << "   " << P << "   " << I << "   " << D << "   "  << endl;
 	r = CHTransform(target, bias);
 	file.close();
 }
@@ -234,7 +240,10 @@ void Regulator::WriteVANCDirectory(string foldername, string path)
 void Regulator::ResetPIDFromFile()
 {
 	pid.reset_from_file(folder);
-	biasAC = pid.bias;
+	if (biasAC != pid.bias) {
+		biasAC = pid.bias;
+		MFLI.setACAmplitude(biasAC);
+	}	
 	pid.set_zero_pos(pid.last_signal);
 }
 void Regulator::LoadParamsFromFile(string path , int count, double**arr)
@@ -628,6 +637,7 @@ void Regulator::VANC_PID()
 	double count, target_V, buffsize, pre_wait;
 	double* tmp[param_num] = { &biasAC, &biasDC, &frequency, &sinc_on, &filter_freq, &count, &buffsize, &pre_wait, &target_V};
 	LoadParamsFromFile(VANC_SETTINGS, param_num, tmp);
+	//cout << endl << biasAC << "   " << biasDC << "   " << frequency << "   " << sinc_on << "   " << filter_freq << "   " << count << "   " << buffsize << "   " << pre_wait << "   " << target_V << endl;
 	WriteProgressStatus("VANC measurments", 0, pre_wait+ (ADC_BUF_SIZE_2 / ADC_TGT_FREQ+1) * count);
 	target_V = target_V / 10;
 	if (sinc_on == 1)	MFLI.setSincEnable();
@@ -647,18 +657,19 @@ void Regulator::VANC_PID()
 		+ "\n	Target_V: " + to_string(target_V) + "\n	Count: " + to_string(count) + "\n	Delay: " + to_string(delay)
 		+ "\n	X: " + to_string(piezo.Position('X')) + "	Y: " + to_string(piezo.Position('Y')));
 	pid.reset(target_V, biasAC);
-	pid.save_settings();
+	//pid.save_settings();
 	WriteVANCDirectory(folder + SCAN_FOLDER + timestr);
 	double  height = IntPID_exp(biasAC, target_V, pre_wait * 1000000, 0);
-	
+	//cout << "done   " << 0 << " of " << count << " VANCS" << endl;
 	for (int i = 1; i <= count; i++) {
 		tmr.get_loop_interval();
 		XYCard.StartReadStream();
 		height = IntPID_exp(biasAC, target_V, delay * 1000000, height);
 		data = XYCard.AnalogRead(0, ADC_BUF_SIZE_2);
 		XYCard.StopReadStream();
-		data.print_f_VANC("VANC_" + to_string(i), folder + SCAN_FOLDER + timestr);
 		cout << "done   " << i << " of " << count << " VANCS" << endl;
+		data.print_f_VANC("VANC_" + to_string(i),".bin", folder + SCAN_FOLDER + timestr);
+
 		//cin >> stop;
 		//if (stop) break;
 		cout << "loop time : " << tmr.get_loop_interval() / 1000000 << endl;
@@ -766,7 +777,7 @@ void Regulator::TouchScan() {
 	double  bwa, crit_V, x_start, x_step, x_stop, y_start, y_step, y_stop, step_speed, pre_wait, h_diff_lim, up_mult;
 	double* tmp[param_num] = {&biasAC, &biasDC, &frequency, &sinc_on, &filter_freq, &bwa, &crit_V, &x_start, &x_step, &x_stop, &y_start, &y_step, &y_stop, &step_speed, &pre_wait , &h_diff_lim, &up_mult };
 	LoadParamsFromFile(TouchScan_SETTINGS, param_num, tmp);
-	WriteProgressStatus("TOUCH SCAN", 0, 100);
+
 	crit_V = crit_V / 10;
 	if (sinc_on == 1)	MFLI.setSincEnable();
 	else MFLI.setSincDisable();
@@ -785,6 +796,7 @@ void Regulator::TouchScan() {
 	make_logs(log);
 		
 	Scan scan(abs(x_stop - x_start), abs(y_stop - y_start), abs(x_step), abs(y_step), biasDC);
+	WriteProgressStatus("TOUCH SCAN", 0, 0.3 / step_speed * scan.y_n * scan.x_n * bwa + pre_wait);
 	AddFileToSession(SCAN_LIST_NAME, scan.save_dir + "H" +  scan.fwname);
 	/*»дЄм на старт*/
 	bool is_touch = false;
@@ -813,15 +825,8 @@ void Regulator::TouchScan() {
 
 	
 	for (int i = 0; i < pre_wait; i++) {
-		uwait(1000000); // ждЄм pre_wait секунд
-		while (GetStatus() < 2) {
-			if (GetStatus() == 0) {
-				MHome();
-				std::cout << "VANC measurements stopped by user" << endl;
-				make_logs("VANC measurements stopped by user ");
-				exit(0);
-			}
-		}
+		Sleep(1000); // ждЄм pre_wait секунд
+		if (CheckStatus("Touch scan stopped by user")) return;
 	}
 
 	is_touch = (ZCard.SingleAnalogRead() > crit_V);
@@ -903,7 +908,7 @@ void Regulator::TouchScan() {
 		piezo.Move(Vecter(0, y_step, 0), 0, MIN_STEP_SIZE* step_speed, ZCard, XYCard);
 		std::cout << "current y:	" << y << "	of	" << scan.y_n << endl;
 		scan.SaveRow(y);
-		WriteProgressStatus("TOUCH SCAN", y * 100 / scan.y_n, 100);
+		WriteProgressStatus("TOUCH SCAN", y * 100 / scan.y_n, 0.3 / step_speed * (scan.y_n - y) * scan.x_n * bwa );
 		if (GetStatus() < 2) {
 			piezo.Move(Vecter(0, 0, -up_mult * bwa), 100, MIN_STEP_SIZE * step_speed , ZCard, XYCard);
 			if (CheckStatus("Touch scan stopped by user")) return;

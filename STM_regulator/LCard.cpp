@@ -75,6 +75,7 @@ void ADC_Collect::print_f(string filename, string directory)
 
 void ADC_Collect::print_f_VANC(string filename, string filetype, string directory)
 {
+	//cout << directory << endl;
 	std::filesystem::create_directories(directory);
 	FILE* fileV;
 	FILE* fileA;
@@ -89,7 +90,7 @@ void ADC_Collect::print_f_VANC(string filename, string filetype, string director
 	
 	fclose(fileV);
 	fclose(fileA);
-	fclose(fileN);
+	fclose(fileN); 
 }
 
 LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), data(ADC_CH_COUNT, ADC_BUF_SIZE), next_lch(0), ADC_CH_COUNT(ADC_CH_COUNT) {
