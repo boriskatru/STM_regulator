@@ -67,7 +67,7 @@ class LCard: public Card {
 	/// </summary>
 	double ADC_COLLECT_FREQ = ADC_TGT_FREQ;
 	double ADC_FRAME_FREQ = 0;
-	double ADC_CH_COUNT = 6;
+
 	uint32_t* buf;
 
 public:
@@ -80,10 +80,11 @@ public:
 	LCard(int card_No = 1, int ADC_CH_COUNT = ADC_CHANEL_CNT, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
 	~LCard();
 
+	double ADC_CH_COUNT = 6;
 	uint32_t count_ADC_data = 0;
 	t_l502_hnd hnd;
 	char* serial;
-	ADC_Collect data;
+	//ADC_Collect data;
 	uint32_t next_lch;
 	
 	int status;

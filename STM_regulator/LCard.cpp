@@ -93,7 +93,7 @@ void ADC_Collect::print_f_VANC(string filename, string filetype, string director
 	fclose(fileN); 
 }
 
-LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), data(ADC_CH_COUNT, ADC_BUF_SIZE), next_lch(0), ADC_CH_COUNT(ADC_CH_COUNT) {
+LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZE, ADC_CH_COUNT, "LCard", 1), /*data(ADC_CH_COUNT, ADC_BUF_SIZE,)*/ next_lch(0), ADC_CH_COUNT(ADC_CH_COUNT) {
 	status = 0;
 	buf = (uint32_t*)calloc(ADC_BUF_SIZE, sizeof(uint32_t));
 	get_list_res = L502_GetSerialList(serial_list, MAX_MODULES_CNT, L502_GETDEVS_FLAGS_ONLY_NOT_OPENED, NULL);
@@ -221,6 +221,7 @@ void LCard::SingleDigitalOut(uint32_t val, uint32_t mask) {
 	if (error != 0) cerr << "Ошибка  " << error << " в L502_AsyncOutDig(" << mask << ")" << endl;
 }
 double LCard::SingleAnalogRead(int channel, double freq , uint32_t tout , uint32_t flags ) {
+	double* current_data = (double*)calloc(ADC_BUF_SIZE_1, sizeof(double));
 	if ((freq != -1) && (freq != ADC_COLLECT_FREQ)) {
 		ADC_COLLECT_FREQ = freq;
 		ADC_FRAME_FREQ = freq / 2;
@@ -230,27 +231,27 @@ double LCard::SingleAnalogRead(int channel, double freq , uint32_t tout , uint32
 		else cout << "ADC_COLLECT_FREQ = " << ADC_COLLECT_FREQ << endl << "ADC_FRAME_FREQ = " << ADC_FRAME_FREQ << endl;
 		//getchar(); getchar();
 	}
-	error = L502_AsyncGetAdcFrame(hnd, flags, tout, data.current_data);
+	error = L502_AsyncGetAdcFrame(hnd, flags, tout, current_data);
 	read_cnt++;
-	//if (error != 0) cerr << "Ошибка  " << error << " в L502_AsyncGetAdcFrame(" << flags << ")" << endl;
-	return data.current_data[channel];
+	if (error != 0) cerr << "Ошибка  " << error << " в L502_AsyncGetAdcFrame(" << flags << ")" << endl;
+	return current_data[channel];
 }
 double LCard::SingleAnalogRead(int channel, double timeout)
 {
 	return SingleAnalogRead(channel, -1, 1U, 1U);
 }
 double* LCard::AsyncAnalogRead(double freq , uint32_t tout , uint32_t flags ) {
+	double* current_data = (double*)calloc(ADC_BUF_SIZE_1, sizeof(double));
 	if ((freq != -1) && (freq != ADC_COLLECT_FREQ)) {
 		ADC_COLLECT_FREQ = freq;
 		ADC_FRAME_FREQ = freq / 2;
-		error = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ,
-			&ADC_FRAME_FREQ);
+		error = L502_SetAdcFreq(hnd, &ADC_COLLECT_FREQ,	&ADC_FRAME_FREQ);
 		if (error != 0) cerr << "Ошибка  " << error << " в L502_SetAdcFreq(" << freq << ")" << endl;
 		else cout << "ADC_COLLECT_FREQ = " << ADC_COLLECT_FREQ << endl << "ADC_FRAME_FREQ = " << ADC_FRAME_FREQ << endl;
 	}
-	error = L502_AsyncGetAdcFrame(hnd, flags, tout, data.current_data);
+	error = L502_AsyncGetAdcFrame(hnd, flags, tout, current_data);
 	if (error != 0) cerr << "Ошибка  " << error << " в L502_AsyncGetAdcFrame(" << flags << ")" << endl;
-	return data.current_data;
+	return current_data;
 }
 double LCard::SingleDigitalRead() {
 	cout << "Эта функция не написана, да и не особо нужна" << endl;
@@ -261,6 +262,7 @@ double LCard::SingleDigitalRead() {
 /// Чтение сигнала с платы. Возвращает обработанную информацию в data
 /// </summary>
 ADC_Collect LCard::AnalogRead(int timeout_ms , int bufsize ) {
+	ADC_Collect data_(ADC_CHANEL_CNT, bufsize);
 	StartReadStream();
 	if (timeout_ms!=0) {
 		uwait(timeout_ms * 1000);
@@ -288,19 +290,19 @@ RECIEVE:
 	}
 
 	if (error < 0) cerr << "Ошибка  " << error << " в L502_Recv()" << endl;
-	error = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
+	error = L502_ProcessAdcData(hnd, buf, data_.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
 	
 	if (error == -140) {
 		StopReadStream();
 		StartReadStream();
 		error = L502_Recv(hnd, buf, bufsize, timeout_ms);
-		error = L502_ProcessAdcData(hnd, buf, data.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
+		error = L502_ProcessAdcData(hnd, buf, data_.current_data, &count_ADC_data, L502_PROC_FLAGS_VOLT);
 	}
 	else if ((error != 0) && (error != -11)) cerr << "Ошибка  " << error << " в L502_ProcessAdcData()" << endl;
 	if (count_ADC_data == 0) goto RECIEVE;
-	data.recv_cnt = count_ADC_data;
-	data.parse_channels();	
-	return data;
+	data_.recv_cnt = count_ADC_data;
+	data_.parse_channels();
+	return data_;
 
 }
 void LCard::StopReadStream() {

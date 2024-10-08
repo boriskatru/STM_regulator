@@ -944,17 +944,17 @@ void Regulator::Pn_CVg_TransistorCalibration() {
 	vector<double> noise(point_num, point_num);
 	vector<double> volts(point_num, point_num);
 	string timestr = get_time_string();
-	std::filesystem::create_directories(folder + timestr);
+	std::filesystem::create_directories(MAIN_FOLDER + "scans/" + timestr);
 	ofstream file, file_Back;
 	
-	std::cout << endl << "Output directories created: " << folder + timestr << endl;
+	std::cout << endl << "Output directories created: " << MAIN_FOLDER + "scans/" + timestr << endl;
 	std::cout << endl << point_num << " Data points expected:"  << endl;
 	std::cout << endl << " Expexted time:" << (delay + ADC_BUF_SIZE_2 / 2) * point_num * 2 / 1000000 / 60 * 13 / 11 << "m" << endl;
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	uwait(1000000);
-	file.open(folder + timestr + "/" + "Noise_D.dat", std::ofstream::out);
-	file_Back.open(folder + timestr + "/" + "Noise_B.dat", std::ofstream::out);
+	file.open(MAIN_FOLDER + "scans/" + timestr + "/" + "Noise_D.dat", std::ofstream::out);
+	file_Back.open(MAIN_FOLDER + "scans/" + timestr + "/" + "Noise_B.dat", std::ofstream::out);
 	XYCard.StopReadStream();
 	XYCard.StartReadStream();
 	for (int i = 0; i < point_num; i++) {
@@ -972,7 +972,9 @@ void Regulator::Pn_CVg_TransistorCalibration() {
 		std::cout << endl << endl <<  i + 1 << "  of  " << point_num << "  FW points done " << endl;
 		file << noise[i] << "   " << volts[i] <<endl;
 		WriteProgressStatus("CALIBRATION NOISE POWER FROM GATE VOLTAGE", i * 100 / 2 / point_num, ADC_BUF_SIZE_2 / ADC_TGT_FREQ * (2 *point_num - i));
-		
+		if (GetStatus() < 2) {			
+			if (CheckStatus("Touch scan stopped by user")) return;
+		}
 	}
 	std::cout << "data printed in file Noise_D.dat " << endl;
 	for (int i = point_num-1; i >=0; i--) {
@@ -989,7 +991,9 @@ void Regulator::Pn_CVg_TransistorCalibration() {
 		std::cout << endl << endl << point_num - i << "  of  " << point_num << "  BW points done " << endl;
 		file_Back << noise[i] << "   " << volts[i]  << endl;
 		WriteProgressStatus("CALIBRATION NOISE POWER FROM GATE VOLTAGE", i * 100 / point_num + 50, ADC_BUF_SIZE_2 / ADC_TGT_FREQ * (point_num - i));
-	
+		if (GetStatus() < 2) {
+			if (CheckStatus("Touch scan stopped by user")) return;
+		}
 	}
 	std::cout << "data printed in file Noise_B.dat " << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
@@ -1014,8 +1018,8 @@ void Regulator::R_CVg_TransistorCalibration() {
 	string timestr = get_time_string();
 	double Vg = Vg_min, Vbias =  0, Vsd = 0;
 	double noise;
-	double offset = 0.004;// было 0.004
-	std::filesystem::create_directories(folder + timestr);
+	double offset = 0.008;// было 0.004
+	std::filesystem::create_directories(MAIN_FOLDER + "scans/" + timestr);
 	ofstream file;
 	std::cout << endl << " Output directories created..." << endl;	
 	XYCard.StopReadStream();
@@ -1024,7 +1028,7 @@ void Regulator::R_CVg_TransistorCalibration() {
 	int dir = -1;
 	for (double Vg = Vg_min; Vg < Vg_max; Vg += incr) {
 		count++;
-		file.open("../../scans/" + timestr + "/" + "VAC_Vg_" + to_string(Vg) + ".dat", std::ofstream::out);
+		file.open(MAIN_FOLDER + "scans/" + timestr + "/" + "VAC_Vg_" + to_string(Vg) + ".dat", std::ofstream::out);
 		Vbias = 0;
 		ZCard.SingleAnalogOut(Vg, Z_OUT);
 		ZCard.SingleAnalogOut(Vbias, Z_OUT_FINE);
@@ -1032,7 +1036,9 @@ void Regulator::R_CVg_TransistorCalibration() {
 		dir = -1;
 		uwait(delay_us);
 		while ((dir < 1) || (Vbias <= MIN_STEP_SIZE)) {	
-			
+			if (GetStatus() < 2) {
+				if (CheckStatus("Touch scan stopped by user")) return;
+			}
 			ZCard.SingleAnalogOut(Vbias, Z_OUT_FINE);
 			XYCard.StopReadStream();
 			XYCard.StartReadStream();
@@ -1041,7 +1047,7 @@ void Regulator::R_CVg_TransistorCalibration() {
 			//uwait(10*delay_us);// проверка влияния задержки в больших сопротивлениях - не помогло
 
 			data = XYCard.AnalogRead(ADC_BUF_SIZE_3 / 2000, ADC_BUF_SIZE_3);
-			Vsd = data.Average(ADC_BUF_SIZE_3 / data.ch_count, R_CALIBR_CH);
+			Vsd = data.Average(ADC_BUF_SIZE_3 / data.ch_count, BIAS_CH);  //БЫЛ R_CALIBR_CH!!!! ВЕРНУТЬ СРОЧНО!!!!!!
 			noise = data.Average(ADC_BUF_SIZE_3 / data.ch_count, NOISE_CH);
 
 			file << Vsd << "   " << ZCard.cur_volt[0] << "   " << noise << "   " << Vg << endl;

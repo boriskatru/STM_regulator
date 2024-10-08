@@ -45,8 +45,8 @@ int main()
     //////////////ПРОВЕРКА СИГНАЛА ПЛАТ///////////////////////
 
     ADC_Collect data = regul.XYCard.AnalogRead(100, ADC_BUF_SIZE_2);
-    cout << "XYCard.data.ch_count" << regul.XYCard.data.ch_count << endl;
-    for (int i = 0; i < regul.XYCard.data.ch_count; i++) {
+    cout << "XYCard.data.ch_count" << regul.XYCard.ADC_CH_COUNT << endl;
+    for (int i = 0; i < regul.XYCard.ADC_CH_COUNT; i++) {
         cout << "LC ch " << i << " value: " << data.Average(16, i) << endl;
     }
     regul.XYCard.StopReadStream();
