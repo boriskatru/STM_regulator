@@ -508,7 +508,7 @@ double Regulator::Landing() {
 			if (CheckStatus("Landing stopped by user")) return 0;
 			
 			for (int i = 0; i < 10; i++) {
-				uwait(1000);
+				uwait(delay/10);
 				ZCard.SingleAnalogRead();
 			}
 
@@ -517,7 +517,7 @@ double Regulator::Landing() {
 	}
 
 	
-	piezo.Move(Vecter(0, 0, -0.2), delay, 8 * djump, ZCard, XYCard);
+	piezo.Move(Vecter(0, 0, -0.2), 0, 8 * djump, ZCard, XYCard);
 	MHome();
 	ZCard.StopReadStream();
 	piezo.JumpTo(Vecter(0, 0, 0), ZCard, XYCard);
