@@ -7,8 +7,8 @@
 #define MAX_MODULES_CNT 3
 #define ADC_CHANEL_CNT 6
 #define ADC_BUF_SIZE_1 1		
-#define ADC_BUF_SIZE_2 4000000			// размер длинного буфера платы оси XY  для чтения ВАХ
-#define ADC_BUF_SIZE_3 300000  //размер длинного буфера платы оси XY  для калибровок 
+#define ADC_BUF_SIZE_2 4000000			// размер длинного буфера платы LCard  для чтения ВАХ
+#define ADC_BUF_SIZE_3 400000			//размер длинного буфера платы LCard  для калибровок R(Vg)
 #define S_CNT_CRIT_NUM 3
 #define RECIVE_COUNT_TIMEOUT 5000
 #define ANALOG_OUT_FLAG 0x0001

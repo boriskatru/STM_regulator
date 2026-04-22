@@ -133,8 +133,8 @@ Scan::Scan(double x_dim, double y_dim, double x_step, double y_step, double volt
 	HBWplot(y_dim / y_step, vector<double>(x_dim / x_step, 0)),
 	CFWplot(y_dim / y_step, vector<double>(x_dim / x_step, 0)),
 	CBWplot(y_dim / y_step, vector<double>(x_dim / x_step, 0)),
-	x_n(x_dim / x_step),
-	y_n(y_dim / y_step)
+	x_n(round(x_dim / x_step)),
+	y_n(round(y_dim / y_step))
 {
 	time_t rawtime;
 	struct tm* timeinfo;

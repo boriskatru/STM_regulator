@@ -650,7 +650,7 @@ void Regulator::VANC_PID()
 	MFLI.setACAmplitude(biasAC);
 	double delay = 1 + ADC_BUF_SIZE_2 / ADC_TGT_FREQ;
 
-	ADC_Collect data = XYCard.AnalogRead(100, ADC_BUF_SIZE_2);
+	data = XYCard.AnalogRead(100, ADC_BUF_SIZE_2);
 	Timer tmr;
 	string timestr = get_time_string();
 	make_logs("VANC measurements with PID started \nParameters: \n	BiasAC: " + to_string(biasAC) + "\n	Frequency: " + to_string(frequency)
@@ -936,7 +936,7 @@ void Regulator::Pn_CVg_TransistorCalibration() {
 	LoadParamsFromFile(PNCalibr_SETTINGS, param_num, tmp);
 	WriteProgressStatus("CALIBRATION NOISE POWER FROM GATE VOLTAGE", 0, 100);
 	make_logs("Pn_CVg_TransistorCalibration started\nTime per point: " + to_string((float)ADC_BUF_SIZE_2 / ADC_TGT_FREQ) + " s");
-	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2000, ADC_BUF_SIZE_2);
+	data = XYCard.AnalogRead(ADC_BUF_SIZE_2 / 2000, ADC_BUF_SIZE_2);
 	int point_num = (Vg_max - Vg_min) / incr;
 	double dispersion = 0;
 	double max_delta = 0;
@@ -1003,22 +1003,24 @@ void Regulator::Pn_CVg_TransistorCalibration() {
 }
 void Regulator::R_CVg_TransistorCalibration() {
 	WriteExecStatus(2);
-	const int param_num = 7;
-	double  Vg_min, Vg_max, incr, delay_us, Vsd_crit, Vbias_crit, nothing;
-	double* tmp[param_num] = { &Vg_min, &Vg_max, &incr, &Vsd_crit, &Vbias_crit, &nothing, &delay_us };
+	const int param_num = 8;
+	double  Vg_min, Vg_max, incr, delay_us, Vsd_crit, Vbias_crit, nothing, range_offset;
+	double* tmp[param_num] = { &Vg_min, &Vg_max, &incr, &Vsd_crit, &Vbias_crit, &nothing, &delay_us, &range_offset};
+	cout << endl << range_offset << endl;
 	LoadParamsFromFile(RCalibr_SETTINGS, param_num, tmp);
 	WriteProgressStatus("CALIBRATION TRANSISTOR RESISTANCE FROM GATE VOLTAGE", 0, 100);
 	make_logs("R_CVg_TransistorCalibration started\nTime per point: " + to_string((float)ADC_BUF_SIZE_3 / ADC_TGT_FREQ) + " s");
 
 
-	ADC_Collect data = XYCard.AnalogRead(ADC_BUF_SIZE_3 / 500, ADC_BUF_SIZE_3);
+	data = XYCard.AnalogRead(ADC_BUF_SIZE_3 / 500, ADC_BUF_SIZE_3);
 	std::cout << endl << " R_CVg_TransistorCalibration started..." << endl;
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0.0, Z_OUT_FINE);
 	string timestr = get_time_string();
 	double Vg = Vg_min, Vbias =  0, Vsd = 0;
 	double noise;
-	double offset = 0.004;// было 0.004
+	double Vsd_offset = 0.000;// было 0.004
+	//double range_offset = 0.032;// было 0.004
 	std::filesystem::create_directories(MAIN_FOLDER + "scans/" + timestr);
 	ofstream file;
 	std::cout << endl << " Output directories created..." << endl;	
@@ -1037,7 +1039,7 @@ void Regulator::R_CVg_TransistorCalibration() {
 		uwait(delay_us);
 		while ((dir < 1) || (Vbias <= MIN_STEP_SIZE)) {	
 			if (GetStatus() < 2) {
-				if (CheckStatus("Touch scan stopped by user")) return;
+				if (CheckStatus("Calibration  R(Vg_calibr) stopped by user")) return;
 			}
 			ZCard.SingleAnalogOut(Vbias, Z_OUT_FINE);
 			XYCard.StopReadStream();
@@ -1047,13 +1049,13 @@ void Regulator::R_CVg_TransistorCalibration() {
 			//uwait(10*delay_us);// проверка влияния задержки в больших сопротивлениях - не помогло
 
 			data = XYCard.AnalogRead(ADC_BUF_SIZE_3 / 2000, ADC_BUF_SIZE_3);
-			Vsd = data.Average(ADC_BUF_SIZE_3 / data.ch_count, NOISE_CH);  //БЫЛ R_CALIBR_CH!!!! ВЕРНУТЬ СРОЧНО!!!!!!
+			Vsd = data.Average(ADC_BUF_SIZE_3 / data.ch_count, R_CALIBR_CH);  //БЫЛ R_CALIBR_CH!!!! 
 			noise = data.Average(ADC_BUF_SIZE_3 / data.ch_count, NOISE_CH);
 
 			file << Vsd << "   " << ZCard.cur_volt[0] << "   " << noise << "   " << Vg << endl;
 			
-			if (((Vsd >= Vsd_crit- offset) && (dir == -1)) ||
-				((Vsd <= -Vsd_crit - offset) && (dir == 0)) ||
+			if (((Vsd >= Vsd_crit- Vsd_offset) && (dir == -1)) ||
+				((Vsd <= -Vsd_crit - Vsd_offset) && (dir == 0)) ||
 				(Vbias >= Vbias_crit ) ||
 				(Vbias <= -Vbias_crit)) {
 				
@@ -1061,7 +1063,7 @@ void Regulator::R_CVg_TransistorCalibration() {
 				cout << dir << endl;
 			}
 			
-			Vbias += TrBiasStepper(Vg, dir ? FORWARD : BACKWARD);
+			Vbias += TrBiasStepper(Vg, dir ? FORWARD : BACKWARD, range_offset);
 			
 		}
 	
@@ -1070,7 +1072,7 @@ void Regulator::R_CVg_TransistorCalibration() {
 		std::cout << " data printed in file VAC_Vg_" << Vg << ".dat " << endl;
 		std::cout << count << "  of  " << vac_num << " VACs done" << endl;
 		file.close();
-		WriteProgressStatus("CALIBRATION TRANSISTOR RESISTANCE FROM GATE VOLTAGE", count/ vac_num, vac_num-count);
+		WriteProgressStatus("CALIBRATION TRANSISTOR RESISTANCE FROM GATE VOLTAGE", 100 * count / vac_num, (vac_num - count) * 30);
 	}
 	ZCard.SingleAnalogOut(Vg_min, Z_OUT);
 	ZCard.SingleAnalogOut(0, Z_OUT_FINE);

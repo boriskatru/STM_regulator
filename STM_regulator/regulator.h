@@ -77,20 +77,21 @@ inline void make_logs( string text, string folder= MAIN_FOLDER) {
 	file << endl << timestr<< ":" << endl << text << endl;;
 	file.close();
 }
-inline double TrBiasStepper( double Vg, bool dir ) {
+inline double TrBiasStepper( double Vg, bool dir, double range_offset) {
 	short int sign = 1;
 	if (dir == 0) sign = -1;
-	double offset = 0.072;
-	double ranges[6][2] = {
-		{ 0.446, 0.4 },
-		{ 0.432, 0.1 },
-		{ 0.422, 0.03 },
-		{ 0.414, 48 * MIN_STEP_SIZE },
-		{ 0.408, 12 * MIN_STEP_SIZE },
-		{ 0.400, 4 * MIN_STEP_SIZE }
+	//double offset = 0.032;
+	double ranges[7][2] = {
+		{ 0.57, 0.2 },//{ 0.452, 0.35 },
+		{ 0.56, 0.05 },//{ 0.440, 0.2 },
+		{ 0.54,  80 * MIN_STEP_SIZE },//{ 0.432, 0.08 },
+		{ 0.530, 24 * MIN_STEP_SIZE },//{ 0.422, 0.03 },
+		{ 0.52, 8 * MIN_STEP_SIZE },//{ 0.412, 48 * MIN_STEP_SIZE },
+		{ 0.515, 4 * MIN_STEP_SIZE },//{ 0.405, 12 * MIN_STEP_SIZE },
+		{ 0.450, 2 * MIN_STEP_SIZE } //{ 0.400, 4 * MIN_STEP_SIZE }
 	};
-	for (int i = 0; i < 6; i++ ) {
-		if (Vg > ranges[i][0] + offset) return (sign * ranges[i][1]);
+	for (int i = 0; i < 7; i++ ) {
+		if (Vg > ranges[i][0] + range_offset) return (sign * ranges[i][1]);
 	}
 	return 2 * sign * MIN_STEP_SIZE;
 	
@@ -231,6 +232,7 @@ public:
 	PID pid;
 	string folder;
 	string session_folder;
+	ADC_Collect data;
 
 	vector<double> buffer = vector<double>(5000, 0);
 	double frequency;		
@@ -408,7 +410,7 @@ public:
 
 	/// <summary>
 	/// Калибровка сопротивления калибровочного транзистора от напряжения на гейте (по квази-трёхточке).
-	/// To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC1) to C2; Noise (F1) -C3
+	/// To calibrate R-V(gate) connect Z_coarse to C1 ; Z_fine (NDAC1) to C2; 
 	/// </summary>
 	/// <param name="incr"> шаг калибровки гейта транзистора, В</param>
 	/// <param name="Vg_min"> минимальный гейт транзистора, В</param>

@@ -34,6 +34,10 @@ public:
 	/// <param name="ADC_BUF_SIZE"> Размер буфера чтения </param>
 	ADC_Collect(int ch_count = 6, int ADC_BUF_SIZE = ADC_BUF_SIZE_2);
 	/// <summary>
+	/// Деструктор
+	/// </summary>
+	~ADC_Collect();
+	/// <summary>
 	/// Обработка данных с карты
 	/// </summary>
 	void parse_channels();

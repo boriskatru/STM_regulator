@@ -14,6 +14,16 @@ ADC_Collect::ADC_Collect(int ch_count, int ADC_BUF_SIZE ) :
 		current_data[i] = 0;
 	}
 }
+
+ADC_Collect::~ADC_Collect(){
+	try {		
+		//current_data = (double*)realloc(current_data, ch_count* s_ch_bufsz *sizeof(double));
+		free(current_data);
+	}
+	catch (std::exception) {
+		cerr << "Ошибка очистки памяти\n";
+	}
+}
 void ADC_Collect::parse_channels() {
 	bool is_same = 1;
 	for (int i = 0; i < ch_count; i++) {
@@ -136,22 +146,22 @@ LCard::LCard(int card_No, int ADC_CH_COUNT, int ADC_BUF_SIZE) : Card(ADC_BUF_SIZ
 	//			cout << "Ошибка в L502_SetLChannel()" << error << endl;
 	//	}
 	//}
-	error = L502_SetLChannel(hnd, 0, 0, L502_LCH_MODE_COMM, L502_ADC_RANGE_05, 0);
+	error = L502_SetLChannel(hnd, 0, 0, L502_LCH_MODE_COMM, L502_ADC_RANGE_5, 0);
 	if (error)
 		cout << "Ошибка в L502_SetLChannel()" << error << endl;
-	error = L502_SetLChannel(hnd, 1, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	error = L502_SetLChannel(hnd, 1, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_5, 0);
 	if (error)
 		cout << "Ошибка в L502_SetLChannel()" << error << endl;
-	error = L502_SetLChannel(hnd, 2, 2, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	error = L502_SetLChannel(hnd, 2, 2, L502_LCH_MODE_COMM, L502_ADC_RANGE_5, 0);
 	if (error)
 		cout << "Ошибка в L502_SetLChannel()" << error << endl;
-	error = L502_SetLChannel(hnd, 3, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	error = L502_SetLChannel(hnd, 3, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_5, 0);
 	if (error)
 		cout << "Ошибка в L502_SetLChannel()" << error << endl;
-	error = L502_SetLChannel(hnd, 4, 3, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	error = L502_SetLChannel(hnd, 4, 3, L502_LCH_MODE_COMM, L502_ADC_RANGE_5, 0);
 	if (error)
 		cout << "Ошибка в L502_SetLChannel()" << error << endl;
-	error = L502_SetLChannel(hnd, 5, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_2, 0);
+	error = L502_SetLChannel(hnd, 5, 1, L502_LCH_MODE_COMM, L502_ADC_RANGE_5, 0);
 	if (error)
 		cout << "Ошибка в L502_SetLChannel()" << error << endl;
 
